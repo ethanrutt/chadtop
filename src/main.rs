@@ -1,6 +1,9 @@
 pub mod cpu;
 pub mod gpu;
 pub mod ram;
+pub mod hdd;
+// pub mod net;
+// pub mod proc;
 
 fn main() {
     let core_info: cpu::CpuInfo = cpu::read_cpuinfo();
@@ -19,4 +22,11 @@ fn main() {
     println!("{}", ram_info.free);
     println!("{}", ram_info.available);
     println!("{}", ram_info.cached);
+
+    let hdd_info: hdd::HddInfo = hdd::read_hddinfo();
+
+    println!("{}", hdd_info.name);
+    println!("{}", hdd_info.mount);
+    println!("{}", hdd_info.used);
+    println!("{}", hdd_info.avail);
 }
