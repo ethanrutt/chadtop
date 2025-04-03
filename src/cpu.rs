@@ -2,7 +2,7 @@ use std::fs;
 
 pub struct CpuCore {
     pub processor_number: i8,
-    pub mhz: f64,
+    pub ghz: f64,
     pub usage: i8,
 }
 
@@ -25,7 +25,7 @@ pub fn read_cpuinfo() -> CpuInfo {
 
     let mut curr_core = CpuCore {
         processor_number: 0,
-        mhz: 0.0,
+        ghz: 0.0,
         usage: 0,
     };
 
@@ -39,7 +39,8 @@ pub fn read_cpuinfo() -> CpuInfo {
             curr_core.processor_number = cols[1].trim().parse().expect("processor not a number");
         }
         else if cols[0].trim() == "cpu MHz" {
-            curr_core.mhz = cols[1].trim().parse().expect("cpu MHz not a number");
+            curr_core.ghz = cols[1].trim().parse().expect("cpu MHz not a number");
+            curr_core.ghz /= 1000.0;
         }
         else if line.is_empty() {
             if curr_core.processor_number != -1 {
@@ -47,7 +48,7 @@ pub fn read_cpuinfo() -> CpuInfo {
             }
             curr_core = CpuCore {
                 processor_number: -1,
-                mhz: 0.0,
+                ghz: 0.0,
                 usage: 0,
             };
         }
