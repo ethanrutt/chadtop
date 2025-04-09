@@ -2,7 +2,7 @@ pub mod cpu;
 pub mod gpu;
 pub mod ram;
 pub mod hdd;
-// pub mod net;
+pub mod net;
 // pub mod proc;
 
 fn main() {
