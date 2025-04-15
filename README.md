@@ -4,7 +4,6 @@ about the linux operating system and learn the rust programming language, so
 I'm fine with solving a problem that's been solved before.
 
 ## TODO
-- Network Speed
 - process list
 - setup TUI
 
