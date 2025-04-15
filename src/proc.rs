@@ -23,6 +23,10 @@ pub fn read_procs() -> Vec<Proc> {
         .expect("Failed to read");
 
     let lines = contents.split("\n");
+    for line in lines {
+        let cols = line.split_whitespace().collect::<Vec<_>>();
+        println!("{:?}", cols);
+    }
 
     return Vec::<Proc>::new();
 }
