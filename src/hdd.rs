@@ -39,3 +39,18 @@ pub fn read_hddinfo() -> HddInfo {
 
     return hdd_info
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_hdd() {
+        let hdd_info = read_hddinfo();
+
+        assert_ne!(hdd_info.name, "not parsed yet");
+        assert_ne!(hdd_info.mount, "not parsed yet");
+        assert_ne!(hdd_info.used, "not parsed yet");
+        assert_ne!(hdd_info.avail, "not parsed yet");
+    }
+}

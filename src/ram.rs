@@ -50,3 +50,18 @@ pub fn read_raminfo() -> RamInfo {
 
     ram_info
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_ram() {
+        let ram_info = read_raminfo();
+
+        assert_ne!(ram_info.total, -1.0);
+        assert_ne!(ram_info.free, -1.0);
+        assert_ne!(ram_info.available, -1.0);
+        assert_ne!(ram_info.cached, -1.0);
+    }
+}

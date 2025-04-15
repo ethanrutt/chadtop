@@ -24,9 +24,9 @@ pub fn read_cpuinfo() -> CpuInfo {
     };
 
     let mut curr_core = CpuCore {
-        processor_number: 0,
-        ghz: 0.0,
-        usage: 0,
+        processor_number: -1,
+        ghz: -1.0,
+        usage: -1,
     };
 
     for line in lines {
@@ -48,11 +48,30 @@ pub fn read_cpuinfo() -> CpuInfo {
             }
             curr_core = CpuCore {
                 processor_number: -1,
-                ghz: 0.0,
-                usage: 0,
+                ghz: -1.0,
+                usage: -1,
             };
         }
     }
 
     core_info
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_cpu() {
+        let core_info = read_cpuinfo();
+
+        assert_ne!(core_info.name, "not yet parsed");
+
+        for core in core_info.cores {
+            assert_ne!(core.processor_number, -1);
+            assert_ne!(core.ghz, -1.0);
+        }
+
+        println!("NOTE: prob need to do some calculations for usage?");
+    }
 }

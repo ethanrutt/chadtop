@@ -34,3 +34,16 @@ pub fn read_gpuinfo() -> GpuInfo {
 
     gpu_info
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_gpu() {
+        let gpu_info = read_gpuinfo();
+
+        assert_ne!(gpu_info.name, "not parsed yet");
+        assert_ne!(gpu_info.mem_size, "-1");
+    }
+}
