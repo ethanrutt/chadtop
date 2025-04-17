@@ -5,5 +5,6 @@ I'm fine with solving a problem that's been solved before.
 
 ## TODO
 - process list
+- usage calculations for cpu
 - setup TUI
 

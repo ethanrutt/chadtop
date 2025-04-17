@@ -72,6 +72,7 @@ mod tests {
             assert_ne!(core.ghz, -1.0);
         }
 
+        // FIXME: need to do calculations for usage
         println!("NOTE: prob need to do some calculations for usage?");
     }
 }

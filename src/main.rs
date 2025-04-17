@@ -30,4 +30,8 @@ fn main() {
     println!("{}", hdd_info.avail);
 
     let procs = proc::read_procs();
+
+    for proc in procs {
+        println!("{}", proc.comm);
+    }
 }
