@@ -3,7 +3,6 @@ use std::fs;
 pub struct CpuCore {
     pub processor_number: i8,
     pub ghz: f64,
-    pub usage: i8,
 }
 
 pub struct CpuInfo {
@@ -26,7 +25,6 @@ pub fn read_cpuinfo() -> CpuInfo {
     let mut curr_core = CpuCore {
         processor_number: -1,
         ghz: -1.0,
-        usage: -1,
     };
 
     for line in lines {
@@ -49,7 +47,6 @@ pub fn read_cpuinfo() -> CpuInfo {
             curr_core = CpuCore {
                 processor_number: -1,
                 ghz: -1.0,
-                usage: -1,
             };
         }
     }
@@ -71,8 +68,5 @@ mod tests {
             assert_ne!(core.processor_number, -1);
             assert_ne!(core.ghz, -1.0);
         }
-
-        // FIXME: need to do calculations for usage
-        println!("NOTE: prob need to do some calculations for usage?");
     }
 }
