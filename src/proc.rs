@@ -47,11 +47,11 @@ pub fn read_procs() -> Vec<Proc> {
         }
     }
 
-    // remove header since it's not a process
-    if processes.is_empty(){
-        // FIXME: figure out how to throw an error
+    if processes.is_empty() {
+        panic!("no processes found");
     }
 
+    // remove header since it's not a process
     processes.remove(0);
     processes
 }
