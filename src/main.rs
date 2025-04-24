@@ -4,34 +4,45 @@ pub mod ram;
 pub mod hdd;
 pub mod proc;
 
-fn main() {
-    let core_info: cpu::CpuInfo = cpu::read_cpuinfo();
-    for core in core_info.cores {
-        println!("{}: {}", core.processor_number, core.ghz);
-    }
+use std::{io, thread, time::Duration};
+use tui::{
+    backend::CrosstermBackend,
+    widgets::{Widget, Block, Borders},
+    layout::{Layout, Constraint, Direction},
+    Terminal
+};
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 
-    let gpu_info: gpu::GpuInfo = gpu::read_gpuinfo();
+fn main() -> Result<(), io::Error> {
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
-    println!("{}", gpu_info.name);
-    println!("{}", gpu_info.mem_size);
+    terminal.draw(|f| {
+        let size = f.size();
+        let block = Block::default()
+            .title("Block")
+            .borders(Borders::ALL);
+        f.render_widget(block, size);
+    })?;
 
-    let ram_info: ram::RamInfo = ram::read_raminfo();
+    thread::sleep(Duration::from_millis(5000));
 
-    println!("{}", ram_info.total);
-    println!("{}", ram_info.free);
-    println!("{}", ram_info.available);
-    println!("{}", ram_info.cached);
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
 
-    let hdd_info: hdd::HddInfo = hdd::read_hddinfo();
-
-    println!("{}", hdd_info.name);
-    println!("{}", hdd_info.mount);
-    println!("{}", hdd_info.used);
-    println!("{}", hdd_info.avail);
-
-    let procs = proc::read_procs();
-
-    for proc in procs {
-        println!("{}", proc.comm);
-    }
+    Ok(())
 }
