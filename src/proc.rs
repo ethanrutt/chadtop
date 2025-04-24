@@ -1,4 +1,7 @@
 use std::process::Command;
+use tui::widgets::ListItem;
+use tui::text::{Span, Spans};
+
 
 pub struct Proc {
     pub uid: String,
@@ -12,7 +15,7 @@ pub struct Proc {
     pub cmd: String,
 }
 
-pub fn read_procs() -> Vec<Proc> {
+pub fn read_procs() -> Vec<ListItem<'static>> {
     let mut processes = Vec::<Proc>::new();
     let process = Command::new("ps")
         .arg("-eo")
@@ -53,8 +56,21 @@ pub fn read_procs() -> Vec<Proc> {
 
     // remove header since it's not a process
     processes.remove(0);
-    processes
+    convert_to_list_item(processes)
 }
+
+fn convert_to_list_item(proc_list: Vec<Proc>) -> Vec<ListItem<'static>> {
+    let mut converted = Vec::<ListItem>::new();
+
+    for p in proc_list {
+        let s = String::from(format!("{}", p.comm));
+        let l = ListItem::new(s);
+        converted.push(l);
+    }
+
+    converted
+}
+
 
 #[cfg(test)]
 mod tests {
