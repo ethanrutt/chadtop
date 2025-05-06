@@ -6,20 +6,32 @@ pub struct GpuInfo {
 }
 
 pub fn read_gpuinfo() -> GpuInfo {
-    let process = Command::new("glxinfo")
-        .output()
-        .ok()
-        .expect("Failed to execute");
-    let contents = std::string::String::from_utf8(process.stdout)
-        .ok()
-        .expect("Failed to read");
-
-    let lines = contents.split("\n");
-
     let mut gpu_info: GpuInfo = GpuInfo {
         name: String::from("not parsed yet"),
         mem_size: String::from("-1"),
     };
+
+    let process = match Command::new("glxinfo").output() {
+        Ok(output) => output,
+        Err(_) => {
+            gpu_info.name = String::from("no gpu found");
+            gpu_info.mem_size = String::from("no gpu found");
+            return gpu_info;
+        }
+    };
+    let contents = std::string::String::from_utf8(process.stdout)
+        .ok()
+        .expect("Failed to read");
+
+
+    let lines = contents.split("\n");
+
+    let lines = lines.collect::<Vec<_>>();
+    if lines.len() <= 0 {
+        gpu_info.name = String::from("no gpu");
+        gpu_info.mem_size = String::from("no gpu");
+        return gpu_info;
+    }
 
     for line in lines {
         let cols = line.split(":").collect::<Vec<_>>();

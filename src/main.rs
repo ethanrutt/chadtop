@@ -1,22 +1,54 @@
 pub mod cpu;
 pub mod gpu;
-pub mod ram;
 pub mod hdd;
 pub mod proc;
+pub mod ram;
 
-use std::{io, thread, time::Duration};
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Widget, Block, Borders, List},
-    layout::{Layout, Constraint, Direction},
-    style::{Style, Color, Modifier},
-    Terminal
-};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use std::io;
+use tui::{
+    backend::CrosstermBackend,
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, List},
+    Terminal,
+};
+
+fn run_chadtop() -> crossterm::Result<()> {
+    loop {
+        match event::read()? {
+            Event::Key(key) => match key.code {
+                KeyCode::Char('q') => {
+                    break;
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+
+    // clean up threads?
+
+    Ok(())
+}
+
+fn draw_screen(term: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> crossterm::Result<()> {
+    term.draw(|f| {
+        let size = f.size();
+        let proc_list_widget = List::new(proc::read_and_convert_procs())
+            .block(Block::default().title("List").borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+            .highlight_symbol(">>");
+
+        f.render_widget(proc_list_widget, size);
+    })?;
+
+    Ok(())
+}
 
 fn main() -> Result<(), io::Error> {
     // setup terminal
@@ -26,20 +58,9 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let proc_list = proc::read_procs();
+    let _ = draw_screen(&mut terminal);
 
-    terminal.draw(|f| {
-        let size = f.size();
-        let proc_list_widget = List::new(proc_list)
-            .block(Block::default().title("List").borders(Borders::ALL))
-            .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-            .highlight_symbol(">>");
-
-        f.render_widget(proc_list_widget, size);
-    })?;
-
-    thread::sleep(Duration::from_millis(2000));
+    let _ = run_chadtop();
 
     // restore terminal
     disable_raw_mode()?;
