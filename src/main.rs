@@ -17,6 +17,21 @@ use tui::{
     Terminal,
 };
 
+fn draw_screen(term: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> crossterm::Result<()> {
+    term.draw(|f| {
+        let size = f.size();
+        let proc_list_widget = List::new(proc::read_and_convert_procs())
+            .block(Block::default().title("List").borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+            .highlight_symbol(">>");
+
+        f.render_widget(proc_list_widget, size);
+    })?;
+
+    Ok(())
+}
+
 fn run_chadtop() -> crossterm::Result<()> {
     loop {
         match event::read()? {
@@ -31,21 +46,6 @@ fn run_chadtop() -> crossterm::Result<()> {
     }
 
     // clean up threads?
-
-    Ok(())
-}
-
-fn draw_screen(term: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> crossterm::Result<()> {
-    term.draw(|f| {
-        let size = f.size();
-        let proc_list_widget = List::new(proc::read_and_convert_procs())
-            .block(Block::default().title("List").borders(Borders::ALL))
-            .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-            .highlight_symbol(">>");
-
-        f.render_widget(proc_list_widget, size);
-    })?;
 
     Ok(())
 }
