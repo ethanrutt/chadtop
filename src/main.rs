@@ -6,28 +6,30 @@ pub mod ram;
 pub mod state;
 pub mod ui;
 
-use std::io;
+use std::io::{self, Result};
 
 use ratatui::{
     crossterm::{
-        event::{DisableMouseCapture, EnableMouseCapture},
+        event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
         execute,
         terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     },
-    prelude::CrosstermBackend,
+    prelude::{Backend, CrosstermBackend},
     Terminal,
 };
+use state::State;
+use ui::ui;
 
-fn main() -> Result<(), io::Error> {
+fn main() -> Result<()> {
     enable_raw_mode()?;
-    let mut stderr = io::stderr();
-    execute!(stderr, EnterAlternateScreen, EnableMouseCapture)?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
 
-    let backend = CrosstermBackend::new(stderr);
+    let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // let mut app = App::new();
-    // let res = run_app(&mut terminal, &mut app);
+    let mut state = State::new();
+    let _ = run(&mut terminal, &mut state);
 
     disable_raw_mode()?;
     execute!(
@@ -38,4 +40,23 @@ fn main() -> Result<(), io::Error> {
     terminal.show_cursor()?;
 
     Ok(())
+}
+
+fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, state))?;
+
+        if let Event::Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Release {
+                continue;
+            }
+
+            match key.code {
+                KeyCode::Char('q') => {
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+    }
 }
