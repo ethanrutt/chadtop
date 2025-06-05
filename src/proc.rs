@@ -1,6 +1,4 @@
 use std::process::Command;
-use tui::widgets::ListItem;
-
 
 pub struct Proc {
     pub uid: String,
@@ -12,11 +10,6 @@ pub struct Proc {
     pub time: String,
     pub comm: String,
     pub cmd: String,
-}
-
-pub fn read_and_convert_procs() -> Vec<ListItem<'static>> {
-    let procs = read_procs();
-    convert_to_list_item(procs)
 }
 
 pub fn read_procs() -> Vec<Proc> {
@@ -38,19 +31,17 @@ pub fn read_procs() -> Vec<Proc> {
         let cols = line.split_whitespace().collect::<Vec<_>>();
 
         if !cols.is_empty() {
-            processes.push(
-                Proc {
-                    uid: String::from(cols[0]),
-                    pid: String::from(cols[1]),
-                    ppid: String::from(cols[2]),
-                    c: String::from(cols[3]),
-                    stime: String::from(cols[4]),
-                    tty: String::from(cols[5]),
-                    time: String::from(cols[6]),
-                    comm: String::from(cols[7]),
-                    cmd: cols[8..].join(" "),
-                }
-            )
+            processes.push(Proc {
+                uid: String::from(cols[0]),
+                pid: String::from(cols[1]),
+                ppid: String::from(cols[2]),
+                c: String::from(cols[3]),
+                stime: String::from(cols[4]),
+                tty: String::from(cols[5]),
+                time: String::from(cols[6]),
+                comm: String::from(cols[7]),
+                cmd: cols[8..].join(" "),
+            })
         }
     }
 
@@ -62,19 +53,6 @@ pub fn read_procs() -> Vec<Proc> {
     processes.remove(0);
     processes
 }
-
-fn convert_to_list_item(proc_list: Vec<Proc>) -> Vec<ListItem<'static>> {
-    let mut converted = Vec::<ListItem>::new();
-
-    for p in proc_list {
-        let s = String::from(format!("{}", p.comm));
-        let l = ListItem::new(s);
-        converted.push(l);
-    }
-
-    converted
-}
-
 
 #[cfg(test)]
 mod tests {
