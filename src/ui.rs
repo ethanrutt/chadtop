@@ -29,7 +29,11 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let title_chunks = Layout::default()
         .flex(Flex::Center)
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+        .constraints([
+            Constraint::Percentage(10),
+            Constraint::Percentage(10),
+            Constraint::Percentage(80),
+        ])
         .split(chunks[0]);
 
     let title_block = Block::default()
@@ -39,7 +43,6 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let title = Paragraph::new(Text::styled(
         "
 
-
 ┏┣┓┏┓┏┫╋┏┓┏┓
 ┗┛┗┗┻┗┻┗┗┛┣┛
         ",
@@ -47,6 +50,20 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     ))
     .centered()
     .block(title_block);
+
+    let keybinds_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let keybinds = Paragraph::new(Text::styled(
+        "
+(q) quit | (j) navigate down processes | (k) navigate up processes
+(d) bring up signals menu for current selected process
+        ",
+        Style::default(),
+    ))
+    .centered()
+    .block(keybinds_block);
 
     let gigachad_block = Block::default()
         .borders(Borders::NONE)
@@ -98,5 +115,6 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     .block(gigachad_block);
 
     frame.render_widget(title, title_chunks[0]);
-    frame.render_widget(gigachad_art, title_chunks[1]);
+    frame.render_widget(keybinds, title_chunks[1]);
+    frame.render_widget(gigachad_art, title_chunks[2]);
 }
