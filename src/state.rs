@@ -49,8 +49,8 @@ impl State {
     fn previous_row(&mut self) {
         let i = match self.processes_state.selected() {
             Some(i) => {
-                if i >= self.processes.len() - 1 {
-                    0
+                if i == 0 {
+                    self.processes.len() - 1
                 } else {
                     i - 1
                 }
