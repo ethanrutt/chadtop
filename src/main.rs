@@ -43,20 +43,16 @@ fn main() -> Result<()> {
 }
 
 fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<()> {
-    loop {
+    while !state.exit {
         terminal.draw(|f| ui(f, state))?;
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
                 continue;
             }
-
-            match key.code {
-                KeyCode::Char('q') => {
-                    return Ok(());
-                }
-                _ => {}
-            }
+            state.handle_key(&key);
         }
     }
+
+    Ok(())
 }
