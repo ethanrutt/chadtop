@@ -2,12 +2,9 @@ use std::rc::Rc;
 
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
-    style::{palette::tailwind::SLATE, Color, Modifier, Style},
+    style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
-    widgets::{
-        Block, Borders, Cell, HighlightSpacing, List, ListItem, Paragraph, Row, StatefulWidget,
-        Table,
-    },
+    widgets::{Block, Borders, Cell, HighlightSpacing, ListItem, Paragraph, Row, Table},
     Frame,
 };
 
@@ -32,7 +29,6 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         ])
         .split(chunks[1]);
 
-    let header_style = Style::default().fg(Color::White).bg(Color::Black);
     let selected_row_style = Style::default()
         .add_modifier(Modifier::REVERSED)
         .fg(Color::Blue);
@@ -49,14 +45,11 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         .into_iter()
         .map(|h| Cell::new(h))
         .collect::<Row>()
+        .style(Style::default().fg(Color::Blue))
+        .bold()
         .height(1);
 
-    let rows = state.processes.iter().enumerate().map(|(i, process)| {
-        let color = match i % 2 {
-            0 => Color::DarkGray,
-            _ => Color::Black,
-        };
-
+    let rows = state.processes.iter().map(|process| {
         let row = [
             process.pid.clone(),
             process.comm.clone(),
@@ -70,51 +63,31 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         row.into_iter()
             .map(|p| Cell::new(p))
             .collect::<Row>()
-            .style(Style::default().bg(color))
-            .height(2)
+            .style(Style::default().bg(Color::DarkGray))
+            .height(1)
     });
 
     let t = Table::new(
         rows,
         [
-            Constraint::Length(6),
-            Constraint::Length(6),
-            Constraint::Length(6),
-            Constraint::Length(6),
-            Constraint::Length(6),
-            Constraint::Length(6),
-            Constraint::Length(5),
+            Constraint::Length(7),  // pid
+            Constraint::Length(20), // program
+            Constraint::Length(40), // cmd
+            Constraint::Length(6),  // uid
+            Constraint::Length(6),  // stime
+            Constraint::Length(9),  // time
+            Constraint::Length(6),  // ppid
         ],
     )
     .header(process_table_header)
     .row_highlight_style(selected_row_style)
     .column_highlight_style(selected_col_style)
     .cell_highlight_style(selected_cell_style)
-    .highlight_symbol(Text::from(vec![
-        "".into(),
-        " | ".into(),
-        " | ".into(),
-        "".into(),
-    ]))
+    .highlight_symbol(Text::from(vec![" > ".into()]))
     .highlight_spacing(HighlightSpacing::Always)
     .block(process_block);
 
     frame.render_stateful_widget(t, body_chunks[2], &mut state.processes_state);
-
-    //
-    // let processes: Vec<ListItem> = state
-    //     .processes
-    //     .iter()
-    //     .map(|process| ListItem::from(process))
-    //     .collect();
-    //
-    // let process_list = List::new(processes)
-    //     .block(process_block)
-    //     .highlight_style(Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD))
-    //     .highlight_symbol(">")
-    //     .highlight_spacing(HighlightSpacing::Always);
-    //
-    // frame.render_stateful_widget(process_list, body_chunks[2], &mut state.processes_state);
 }
 
 /// renders the title of chadtop

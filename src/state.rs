@@ -28,6 +28,22 @@ impl State {
         }
     }
 
+    pub fn handle_key(&mut self, key: &KeyEvent) {
+        match key.code {
+            KeyCode::Char('q') => self.exit = true,
+            KeyCode::Char('j') => self.next_row(),
+            KeyCode::Char('k') => self.previous_row(),
+            KeyCode::Char('g') => self.first(),
+            KeyCode::Char('G') => self.last(),
+            KeyCode::Esc => self.select_none(),
+            _ => {}
+        }
+    }
+
+    pub fn refresh_procs(&mut self) {
+        self.processes = read_procs();
+    }
+
     fn select_none(&mut self) {
         self.processes_state.select(None);
     }
@@ -66,17 +82,5 @@ impl State {
 
     fn last(&mut self) {
         self.processes_state.select(Some(self.processes.len() - 1));
-    }
-
-    pub fn handle_key(&mut self, key: &KeyEvent) {
-        match key.code {
-            KeyCode::Char('q') => self.exit = true,
-            KeyCode::Char('j') => self.next_row(),
-            KeyCode::Char('k') => self.previous_row(),
-            KeyCode::Char('g') => self.first(),
-            KeyCode::Char('G') => self.last(),
-            KeyCode::Esc => self.select_none(),
-            _ => {}
-        }
     }
 }

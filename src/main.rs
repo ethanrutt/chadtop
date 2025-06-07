@@ -6,7 +6,10 @@ pub mod ram;
 pub mod state;
 pub mod ui;
 
-use std::io::{self, Result};
+use std::{
+    io::{self, Result},
+    time::Duration,
+};
 
 use ratatui::{
     crossterm::{
@@ -46,12 +49,16 @@ fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<
     while !state.exit {
         terminal.draw(|f| ui(f, state))?;
 
-        if let Event::Key(key) = event::read()? {
-            if key.kind == event::KeyEventKind::Release {
-                continue;
+        if event::poll(Duration::new(1, 0))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == event::KeyEventKind::Release {
+                    continue;
+                }
+                state.handle_key(&key);
             }
-            state.handle_key(&key);
         }
+
+        state.refresh_procs();
     }
 
     Ok(())

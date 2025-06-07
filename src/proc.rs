@@ -30,7 +30,7 @@ pub fn read_procs() -> Vec<Proc> {
     for line in lines {
         let cols = line.split_whitespace().collect::<Vec<_>>();
 
-        if !cols.is_empty() {
+        if !cols.is_empty() && cols[7] != "ps" {
             processes.push(Proc {
                 uid: String::from(cols[0]),
                 pid: String::from(cols[1]),
