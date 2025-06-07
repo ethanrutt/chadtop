@@ -1,9 +1,9 @@
 use std::process::Command;
 
 pub struct Proc {
-    pub uid: String,
-    pub pid: String,
-    pub ppid: String,
+    pub uid: i32,
+    pub pid: i32,
+    pub ppid: i32,
     pub c: String,
     pub stime: String,
     pub tty: String,
@@ -30,11 +30,11 @@ pub fn read_procs() -> Vec<Proc> {
     for line in lines {
         let cols = line.split_whitespace().collect::<Vec<_>>();
 
-        if !cols.is_empty() && cols[7] != "ps" {
+        if !cols.is_empty() && cols[7] != "ps" && cols[0] != "UID" {
             processes.push(Proc {
-                uid: String::from(cols[0]),
-                pid: String::from(cols[1]),
-                ppid: String::from(cols[2]),
+                uid: cols[0].parse::<i32>().expect("non integer uid"),
+                pid: cols[1].parse::<i32>().expect("non integer pid"),
+                ppid: cols[2].parse::<i32>().expect("non integer ppid"),
                 c: String::from(cols[3]),
                 stime: String::from(cols[4]),
                 tty: String::from(cols[5]),

@@ -38,7 +38,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         .fg(Color::DarkGray);
 
     let process_block = Block::new()
-        .title(Line::raw("processes").centered())
+        .title(Line::raw(format!("processes - {}", state.process_sort_strategy)).centered())
         .borders(Borders::TOP);
 
     let process_table_header = ["pid", "proc", "cmd", "uid", "stime", "time", "ppid"]
@@ -51,13 +51,13 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     let rows = state.processes.iter().map(|process| {
         let row = [
-            process.pid.clone(),
+            process.pid.to_string(),
             process.comm.clone(),
             process.cmd.clone(),
-            process.uid.clone(),
+            process.uid.to_string(),
             process.stime.clone(),
             process.time.clone(),
-            process.ppid.clone(),
+            process.ppid.to_string(),
         ];
 
         row.into_iter()
@@ -128,6 +128,7 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let keybinds = Paragraph::new(Text::styled(
         "(q) quit | (j) navigate down processes | (k) navigate up processes
 (g) go to first process | (G) go to last process
+(s) cycle next sort strategy
 (d) bring up signals menu for current selected process
         ",
         Style::default(),
