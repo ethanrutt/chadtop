@@ -5,8 +5,7 @@ use ratatui::{
     style::Color,
     widgets::TableState,
 };
-
-use crate::proc::{read_procs, Proc};
+use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System};
 
 pub enum CurrentScreen {
     Main,
@@ -53,7 +52,8 @@ impl ProcessSortStrategy {
 
 pub struct State {
     pub exit: bool,
-    pub processes: Vec<Proc>,
+    pub sys: System,
+    pub processes: Vec<&'a Process>,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
@@ -61,15 +61,26 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
+        let mut sys = System::new_with_specifics(
+            RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+        );
+
+        sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+        let procs = Vec::<&Process>::new();
+        for (pid, process) in sys.processes() {
+            procs.push(process);
+        }
+
         let mut new = State {
             exit: false,
-            processes: read_procs(),
+            sys: sys,
+            processes: procs,
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::Time,
             current_screen: CurrentScreen::Main,
         };
 
-        new.refresh_procs();
         new
     }
 
@@ -102,21 +113,21 @@ impl State {
     }
 
     pub fn refresh_procs(&mut self) {
-        let mut procs = read_procs();
+        self.sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
-        match self.process_sort_strategy {
-            ProcessSortStrategy::Uid => procs.sort_by_key(|p| p.uid.clone()),
-            ProcessSortStrategy::Pid => procs.sort_by_key(|p| p.pid.clone()),
-            ProcessSortStrategy::Ppid => procs.sort_by_key(|p| p.ppid.clone()),
-            ProcessSortStrategy::Stime => procs.sort_by_key(|p| p.stime.clone()),
-            ProcessSortStrategy::Time => {
-                procs.sort_by_key(|p| p.time.clone());
-                procs.reverse();
-            }
-            ProcessSortStrategy::Alphabetical => procs.sort_by_key(|p| p.comm.clone()),
+        self.processes.clear();
+        for (pid, process) in self.sys.processes() {
+            self.processes.push(process);
         }
 
-        self.processes = procs;
+        match self.process_sort_strategy {
+            ProcessSortStrategy::Uid => self.processes.sort_by_key(|p| p.user_id()),
+            ProcessSortStrategy::Pid => self.processes.sort_by_key(|p| p.pid()),
+            ProcessSortStrategy::Ppid => self.processes.sort_by_key(|p| p.parent()),
+            ProcessSortStrategy::Stime => self.processes.sort_by_key(|p| p.start_time()),
+            ProcessSortStrategy::Time => self.processes.sort_by_key(|p| p.run_time()),
+            ProcessSortStrategy::Alphabetical => self.processes.sort_by_key(|p| p.name()),
+        }
     }
 
     fn select_none(&mut self) {

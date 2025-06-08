@@ -1,79 +1,16 @@
-use std::process::Command;
+use sysinfo::{Process, ProcessRefreshKind, RefreshKind, System};
 
-pub struct Proc {
-    pub uid: i32,
-    pub pid: i32,
-    pub ppid: i32,
-    pub c: String,
-    pub stime: String,
-    pub tty: String,
-    pub time: String,
-    pub comm: String,
-    pub cmd: String,
-}
+pub fn read_procs() -> Vec<&Process> {
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+    );
 
-pub fn read_procs() -> Vec<Proc> {
-    let mut processes = Vec::<Proc>::new();
-    let process = Command::new("ps")
-        .arg("-eo")
-        .arg("uid,pid,ppid,c,stime,tty,time,comm,cmd")
-        .output()
-        .ok()
-        .expect("Failed to execute");
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
 
-    let contents = std::string::String::from_utf8(process.stdout)
-        .ok()
-        .expect("Failed to read");
-
-    let lines = contents.split("\n");
-
-    for line in lines {
-        let cols = line.split_whitespace().collect::<Vec<_>>();
-
-        if !cols.is_empty() && cols[7] != "ps" && cols[0] != "UID" {
-            processes.push(Proc {
-                uid: cols[0].parse::<i32>().expect("non integer uid"),
-                pid: cols[1].parse::<i32>().expect("non integer pid"),
-                ppid: cols[2].parse::<i32>().expect("non integer ppid"),
-                c: String::from(cols[3]),
-                stime: String::from(cols[4]),
-                tty: String::from(cols[5]),
-                time: String::from(cols[6]),
-                comm: String::from(cols[7]),
-                cmd: cols[8..].join(" "),
-            })
-        }
+    let ret = Vec::<&Process>::new();
+    for (pid, process) in sys.processes() {
+        ret.push(process);
     }
 
-    if processes.is_empty() {
-        panic!("no processes found");
-    }
-
-    // remove header since it's not a process
-    processes.remove(0);
-    processes
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_read_procs() {
-        let proc_info = read_procs();
-
-        assert!(!proc_info.is_empty());
-
-        for proc in proc_info {
-            assert!(!proc.uid.is_empty());
-            assert!(!proc.pid.is_empty());
-            assert!(!proc.ppid.is_empty());
-            assert!(!proc.c.is_empty());
-            assert!(!proc.stime.is_empty());
-            assert!(!proc.tty.is_empty());
-            assert!(!proc.time.is_empty());
-            assert!(!proc.comm.is_empty());
-            assert!(!proc.cmd.is_empty());
-        }
-    }
+    ret
 }
