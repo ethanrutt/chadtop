@@ -2,6 +2,7 @@ use std::fmt::{self, Display};
 
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
+    style::Color,
     widgets::TableState,
 };
 
@@ -34,6 +35,19 @@ impl Display for ProcessSortStrategy {
         };
 
         write!(f, "{}", text)
+    }
+}
+
+impl ProcessSortStrategy {
+    pub fn get_color(&self) -> Color {
+        match self {
+            ProcessSortStrategy::Uid => Color::Cyan,
+            ProcessSortStrategy::Pid => Color::Magenta,
+            ProcessSortStrategy::Ppid => Color::Yellow,
+            ProcessSortStrategy::Stime => Color::Blue,
+            ProcessSortStrategy::Time => Color::Green,
+            ProcessSortStrategy::Alphabetical => Color::LightRed,
+        }
     }
 }
 
@@ -98,7 +112,7 @@ impl State {
             ProcessSortStrategy::Time => {
                 procs.sort_by_key(|p| p.time.clone());
                 procs.reverse();
-            },
+            }
             ProcessSortStrategy::Alphabetical => procs.sort_by_key(|p| p.comm.clone()),
         }
 
