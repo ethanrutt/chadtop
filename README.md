@@ -3,9 +3,19 @@ This is yet another `top` clone. The purpose of this project is to learn more
 about the linux operating system and learn the rust programming language, so
 I'm fine with solving a problem that's been solved before.
 
+Change of focus. Originally this was going to be a `top` clone, but since I
+don't have certain hardware and won't be able to handle some edge cases, I
+think instead i'm going to just make an in depth process inspector.
+
+Scrapping hwinfo
+
 ## TODO
 - sending signals menu
-- hardware info widget
+- threads
+- user instead of just uid
+- better cpu %
+- fuzzy filter
+- tree would be cool
 
 ## Known Issues
 - time is just a string so sorting is not correct

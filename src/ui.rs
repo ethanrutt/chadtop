@@ -21,7 +21,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     let body_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
+        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)])
         .split(chunks[1]);
 
     render_proc_list(frame, body_chunks[1], state);
@@ -70,7 +70,7 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
         ",
         Style::default(),
     ))
-    .centered()
+    .left_aligned()
     .block(keybinds_block);
 
     let gigachad_block = Block::default()
