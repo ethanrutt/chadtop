@@ -19,7 +19,12 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     render_title(frame, &chunks);
 
-    render_proc_list(frame, &chunks, state);
+    let body_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(20), Constraint::Percentage(80)])
+        .split(chunks[1]);
+
+    render_proc_list(frame, body_chunks[1], state);
 }
 
 /// renders the title of chadtop
@@ -127,19 +132,11 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 /// # Assumptions
 /// We assume that the `chunks` parameter is a horizontal layout split into two
 /// parameters, the first part being 33% and the second part being 67% of the screen
+/// This second part is then split into the bottom 80% of the screen
 ///
 /// We also assume that the argument `state` is already initialized
-fn render_proc_list(frame: &mut Frame, chunks: &Rc<[Rect]>, state: &mut State) {
-    // right 67% of the screen chunks
-    let body_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(80),
-        ])
-        .split(chunks[1]);
-
+fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // right 67% of the screen chunk, split into the bottom 80% of the screen
     let selected_row_style = Style::default()
         .add_modifier(Modifier::REVERSED)
         .fg(Color::Blue);
@@ -203,5 +200,5 @@ fn render_proc_list(frame: &mut Frame, chunks: &Rc<[Rect]>, state: &mut State) {
     .highlight_spacing(HighlightSpacing::Always)
     .block(process_block);
 
-    frame.render_stateful_widget(t, body_chunks[2], &mut state.processes_state);
+    frame.render_stateful_widget(t, chunk, &mut state.processes_state);
 }
