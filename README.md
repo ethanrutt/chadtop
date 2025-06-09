@@ -10,12 +10,16 @@ think instead i'm going to just make an in depth process inspector.
 Scrapping hwinfo
 
 ## TODO
+- parse /proc filesystem instead of using sysinfo since sysinfo doesn't expose
+threads
 - sending signals menu
 - threads
 - user instead of just uid
 - better cpu %
 - fuzzy filter
 - tree would be cool
+
+pid name mem cpu% threads uid guid ppid cmd
 
 ## Known Issues
 - time is just a string so sorting is not correct

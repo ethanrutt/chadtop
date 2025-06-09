@@ -154,7 +154,7 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         )
         .borders(Borders::TOP);
 
-    let process_table_header = ["pid", "proc", "cmd", "uid", "stime", "time", "ppid"]
+    let process_table_header = ["pid", "name", "mem", "cpu usage", "threads", "uid", "guid", "ppid"]
         .into_iter()
         .map(|h| Cell::new(h))
         .collect::<Row>()
@@ -165,11 +165,12 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     let rows = state.processes.iter().map(|process| {
         let row = [
             process.pid.to_string(),
-            process.comm.clone(),
-            process.cmd.clone(),
+            process.name.clone(),
+            process.mem.to_string(),
+            process.cpu_usage.to_string(),
+            process.threads.to_string(),
             process.uid.to_string(),
-            process.stime.clone(),
-            process.time.clone(),
+            process.gid.to_string(),
             process.ppid.to_string(),
         ];
 
