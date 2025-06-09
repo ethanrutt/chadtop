@@ -10,16 +10,16 @@ think instead i'm going to just make an in depth process inspector.
 Scrapping hwinfo
 
 ## TODO
-- parse /proc filesystem instead of using sysinfo since sysinfo doesn't expose
-threads
+- fix calculations, they are tripping rn
+- fix spacing for new table
+- clean up `read_procs` function
+- error handling for options
 - sending signals menu
-- threads
 - user instead of just uid
 - better cpu %
 - fuzzy filter
 - tree would be cool
 
-pid name mem cpu% threads uid guid ppid cmd
 
 ## Known Issues
 - time is just a string so sorting is not correct
@@ -32,3 +32,4 @@ every second or other set time period instead of both
 - better info for processes such as how much memory is used, better cpu instead
 of just raw "time" which is kind of ambiguous, maybe use `sysinfo` crate or do
 more in depth parsing from `/proc`
+- when splitting pane in tmux it panics and fails on `proc.rs:23`
