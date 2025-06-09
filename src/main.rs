@@ -11,7 +11,6 @@ use std::{
     time::Duration,
 };
 
-use proc::Proc;
 use ratatui::{
     crossterm::{
         event::{self, DisableMouseCapture, EnableMouseCapture, Event},

@@ -12,8 +12,8 @@ Scrapping hwinfo
 ## TODO
 - fix calculations, they are tripping rn
 - fix spacing for new table
-- clean up `read_procs` function
-- error handling for options
+- fix bug on pane split
+- improve performance of parsing processes
 - sending signals menu
 - user instead of just uid
 - better cpu %

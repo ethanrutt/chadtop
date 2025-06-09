@@ -68,7 +68,7 @@ impl State {
     pub fn new() -> State {
         let mut new = State {
             exit: false,
-            processes: read_procs(),
+            processes: read_procs().expect("couldn't read procs"),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
@@ -110,7 +110,7 @@ impl State {
     }
 
     pub fn refresh_procs(&mut self) {
-        self.processes = read_procs();
+        self.processes = read_procs().expect("couldn't read procs");
 
         match self.process_sort_strategy {
             ProcessSortStrategy::Uid => self.processes.sort_by_key(|p| p.uid),
