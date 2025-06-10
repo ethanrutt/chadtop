@@ -11,9 +11,9 @@ Scrapping hwinfo
 
 ## TODO
 - switch back to sysinfo so we can also work on macos
-- table should be pid, name, mem, cpu usage, uid, ppid, cmd
+- table should be pid, name, mem, cpy usage, uid, ppid
 - sending signals menu
-- on signal menu also include open files, disk usage, gid, start time, run time, cwd, exe
+- on signal menu also include gid, start time, run time, disk usage, open files, open files limit, cwd, exe
 - fix spacing for new table
 - user instead of just uid
 - fuzzy filter
