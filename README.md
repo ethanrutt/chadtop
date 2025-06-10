@@ -10,15 +10,14 @@ think instead i'm going to just make an in depth process inspector.
 Scrapping hwinfo
 
 ## TODO
-- fix calculations, they are tripping rn
-- fix spacing for new table
-- fix bug on pane split
-- improve performance of parsing processes
+- switch back to sysinfo so we can also work on macos
+- table should be pid, name, mem, cpu usage, uid, ppid, cmd
 - sending signals menu
+- on signal menu also include open files, disk usage, gid, start time, run time, cwd, exe
+- fix spacing for new table
 - user instead of just uid
-- better cpu %
 - fuzzy filter
-- tree would be cool
+- thread for process list updating instead of being in main loop
 
 
 ## Known Issues
