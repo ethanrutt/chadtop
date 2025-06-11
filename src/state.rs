@@ -1,4 +1,5 @@
 use std::fmt::{self, Display};
+use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 
 use crate::proc::{read_procs, Proc};
 use ratatui::{
@@ -17,8 +18,6 @@ pub enum ProcessSortStrategy {
     Uid,
     Pid,
     Ppid,
-    Guid,
-    Threads,
     CpuUsage,
     Alphabetical,
     Memory,
@@ -30,8 +29,6 @@ impl Display for ProcessSortStrategy {
             ProcessSortStrategy::Uid => "uid",
             ProcessSortStrategy::Pid => "pid",
             ProcessSortStrategy::Ppid => "ppid",
-            ProcessSortStrategy::Guid => "guid",
-            ProcessSortStrategy::Threads => "threads",
             ProcessSortStrategy::CpuUsage => "cpu usage",
             ProcessSortStrategy::Alphabetical => "name",
             ProcessSortStrategy::Memory => "memory",
@@ -47,8 +44,6 @@ impl ProcessSortStrategy {
             ProcessSortStrategy::Uid => Color::Cyan,
             ProcessSortStrategy::Pid => Color::Magenta,
             ProcessSortStrategy::Ppid => Color::Yellow,
-            ProcessSortStrategy::Guid => Color::LightGreen,
-            ProcessSortStrategy::Threads => Color::Blue,
             ProcessSortStrategy::CpuUsage => Color::Green,
             ProcessSortStrategy::Alphabetical => Color::LightRed,
             ProcessSortStrategy::Memory => Color::LightMagenta,
@@ -58,6 +53,7 @@ impl ProcessSortStrategy {
 
 pub struct State {
     pub exit: bool,
+    pub sys: System,
     pub processes: Vec<Proc>,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
@@ -68,7 +64,10 @@ impl State {
     pub fn new() -> State {
         let mut new = State {
             exit: false,
-            processes: read_procs().expect("couldn't read procs"),
+            sys: System::new_with_specifics(
+                RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+            ),
+            processes: Vec::new(),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
@@ -94,11 +93,7 @@ impl State {
         match self.process_sort_strategy {
             ProcessSortStrategy::Uid => self.process_sort_strategy = ProcessSortStrategy::Pid,
             ProcessSortStrategy::Pid => self.process_sort_strategy = ProcessSortStrategy::Ppid,
-            ProcessSortStrategy::Ppid => self.process_sort_strategy = ProcessSortStrategy::Guid,
-            ProcessSortStrategy::Guid => self.process_sort_strategy = ProcessSortStrategy::Threads,
-            ProcessSortStrategy::Threads => {
-                self.process_sort_strategy = ProcessSortStrategy::CpuUsage
-            }
+            ProcessSortStrategy::Ppid => self.process_sort_strategy = ProcessSortStrategy::CpuUsage,
             ProcessSortStrategy::CpuUsage => {
                 self.process_sort_strategy = ProcessSortStrategy::Alphabetical
             }
@@ -110,16 +105,14 @@ impl State {
     }
 
     pub fn refresh_procs(&mut self) {
-        self.processes = read_procs().expect("couldn't read procs");
+        self.processes = read_procs(&mut self.sys);
 
         match self.process_sort_strategy {
-            ProcessSortStrategy::Uid => self.processes.sort_by_key(|p| p.uid),
-            ProcessSortStrategy::Guid => self.processes.sort_by_key(|p| p.gid),
+            ProcessSortStrategy::Uid => self.processes.sort_by_key(|p| p.uid.clone()),
             ProcessSortStrategy::Pid => self.processes.sort_by_key(|p| p.pid),
             ProcessSortStrategy::Ppid => self.processes.sort_by_key(|p| p.ppid),
-            ProcessSortStrategy::Threads => self.processes.sort_by_key(|p| p.threads),
             ProcessSortStrategy::CpuUsage => self.processes.sort_by_key(|p| p.cpu_usage),
-            ProcessSortStrategy::Memory => self.processes.sort_by_key(|p| p.mem),
+            ProcessSortStrategy::Memory => self.processes.sort_by_key(|p| p.memory),
             ProcessSortStrategy::Alphabetical => self.processes.sort_by_key(|p| p.name.clone()),
         }
     }

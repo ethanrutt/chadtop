@@ -154,7 +154,7 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         )
         .borders(Borders::TOP);
 
-    let process_table_header = ["pid", "name", "mem", "cpu usage", "threads", "uid", "guid", "ppid"]
+    let process_table_header = ["pid", "name", "memory", "cpu usage", "uid", "ppid"]
         .into_iter()
         .map(|h| Cell::new(h))
         .collect::<Row>()
@@ -165,13 +165,17 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     let rows = state.processes.iter().map(|process| {
         let row = [
             process.pid.to_string(),
-            process.name.clone(),
-            process.mem.to_string(),
+            process.name.clone().unwrap_or(String::from("n/a")),
+            process.memory.to_string(),
             process.cpu_usage.to_string(),
-            process.threads.to_string(),
-            process.uid.to_string(),
-            process.gid.to_string(),
-            process.ppid.to_string(),
+            match process.uid {
+                Some(x) => x.to_string(),
+                None => String::from("n/a"),
+            },
+            match process.ppid {
+                Some(x) => x.to_string(),
+                None => String::from("n/a"),
+            },
         ];
 
         row.into_iter()
@@ -184,13 +188,13 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     let t = Table::new(
         rows,
         [
-            Constraint::Length(7),  // pid
-            Constraint::Length(20), // program
-            Constraint::Length(40), // cmd
-            Constraint::Length(6),  // uid
-            Constraint::Length(6),  // stime
-            Constraint::Length(9),  // time
-            Constraint::Length(6),  // ppid
+            Constraint::Length(7),
+            Constraint::Length(20),
+            Constraint::Length(40),
+            Constraint::Length(6),
+            Constraint::Length(6),
+            Constraint::Length(9),
+            Constraint::Length(6),
         ],
     )
     .header(process_table_header)
