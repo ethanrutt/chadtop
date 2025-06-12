@@ -176,10 +176,12 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         .height(1);
 
     let rows = state.processes.iter().map(|process| {
+        // bytes to mb
+        let memory = process.memory / 1000000;
         let row = [
             process.pid.to_string(),
             process.name.clone().unwrap_or(String::from("n/a")),
-            process.memory.to_string(),
+            memory.to_string() + " mb",
             process.cpu_usage.to_string(),
             match process.uid {
                 Some(x) => x.to_string(),

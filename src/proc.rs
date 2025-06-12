@@ -39,7 +39,7 @@ pub fn read_procs(sys: &mut System) -> Vec<Proc> {
             .cwd()
             .and_then(|s| s.to_str())
             .and_then(|s| Some(String::from(s)));
-        let memory: u64 = proc.memory();
+        let memory: u64 = proc.virtual_memory();
         let ppid: Option<u32> = proc.parent().and_then(|n| Some(n.as_u32()));
         let start_time: u64 = proc.start_time();
         let run_time: u64 = proc.run_time();
