@@ -77,15 +77,23 @@ impl State {
     }
 
     pub fn handle_key(&mut self, key: &KeyEvent) {
-        match key.code {
-            KeyCode::Char('q') => self.exit = true,
-            KeyCode::Char('j') => self.next_row(),
-            KeyCode::Char('k') => self.previous_row(),
-            KeyCode::Char('g') => self.first(),
-            KeyCode::Char('G') => self.last(),
-            KeyCode::Char('s') => self.next_sort_strategy(),
-            KeyCode::Esc => self.select_none(),
-            _ => {}
+        match self.current_screen {
+            CurrentScreen::Main => match key.code {
+                KeyCode::Char('q') => self.exit = true,
+                KeyCode::Char('j') => self.next_row(),
+                KeyCode::Char('k') => self.previous_row(),
+                KeyCode::Char('g') => self.first(),
+                KeyCode::Char('G') => self.last(),
+                KeyCode::Char('s') => self.next_sort_strategy(),
+                KeyCode::Char('d') => self.current_screen = CurrentScreen::Kill,
+                KeyCode::Esc => self.select_none(),
+                _ => {}
+            },
+            CurrentScreen::Kill => match key.code {
+                KeyCode::Char('d') => self.current_screen = CurrentScreen::Main,
+                _ => {}
+            },
+            CurrentScreen::KillConfirm => {}
         }
     }
 

@@ -4,17 +4,17 @@ use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
-    widgets::{Block, Borders, Cell, HighlightSpacing, Paragraph, Row, Table},
+    widgets::{Block, Borders, Cell, Clear, HighlightSpacing, Paragraph, Row, Table},
     Frame,
 };
 
-use crate::state::State;
+use crate::state::{CurrentScreen, State};
 
 /// handles ui for chadtop
 pub fn ui(frame: &mut Frame, state: &mut State) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(33), Constraint::Percentage(67)])
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(frame.area());
 
     render_title(frame, &chunks);
@@ -25,6 +25,19 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         .split(chunks[1]);
 
     render_proc_list(frame, body_chunks[1], state);
+
+    match state.current_screen {
+        CurrentScreen::Kill => {
+            let popup_block = Block::default()
+                .title("bruh")
+                .borders(Borders::NONE)
+                .style(Style::default().bg(Color::Black));
+            let area = centered_rect(60, 25, frame.area());
+            frame.render_widget(Clear, area);
+            frame.render_widget(popup_block, area);
+        }
+        _ => {}
+    }
 }
 
 /// renders the title of chadtop
@@ -190,8 +203,8 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         [
             Constraint::Length(7),
             Constraint::Length(20),
-            Constraint::Length(40),
-            Constraint::Length(6),
+            Constraint::Length(20),
+            Constraint::Length(10),
             Constraint::Length(6),
             Constraint::Length(9),
             Constraint::Length(6),
@@ -206,4 +219,28 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     .block(process_block);
 
     frame.render_stateful_widget(t, chunk, &mut state.processes_state);
+}
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+/// taken from ratatui.rs json editor
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1] // Return the middle chunk
 }
