@@ -58,6 +58,7 @@ pub struct State {
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
+    pub current_pid_watch: Option<u32>,
 }
 
 impl State {
@@ -71,6 +72,7 @@ impl State {
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
+            current_pid_watch: None,
         };
         new.refresh_procs();
         new
@@ -85,7 +87,18 @@ impl State {
                 KeyCode::Char('g') => self.first(),
                 KeyCode::Char('G') => self.last(),
                 KeyCode::Char('s') => self.next_sort_strategy(),
-                KeyCode::Char('d') => self.current_screen = CurrentScreen::Kill,
+                KeyCode::Char('d') => {
+                    match self.processes_state.selected() {
+                        Some(idx) => {
+                            self.current_pid_watch = Some(self.processes[idx].pid);
+                            self.current_screen = CurrentScreen::Kill;
+                        }
+                        None => {
+                            self.current_pid_watch = None;
+                            self.current_screen = CurrentScreen::Main;
+                        }
+                    };
+                }
                 KeyCode::Esc => self.select_none(),
                 _ => {}
             },

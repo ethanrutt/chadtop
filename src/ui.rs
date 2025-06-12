@@ -28,13 +28,75 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     match state.current_screen {
         CurrentScreen::Kill => {
+            // FIXME: make this a list instead of a table
+            let proc_idx = state
+                .processes
+                .iter()
+                .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
+
+            let proc = &state.processes[proc_idx.expect("no proc index")];
+
+            let row = [
+                proc.pid.to_string(),
+                proc.start_time.to_string(),
+                proc.run_time.to_string(),
+                proc.disk_usage_read.to_string(),
+                proc.disk_usage_written.to_string(),
+                proc.open_files.unwrap_or(0).to_string(),
+                proc.open_files_limit.unwrap_or(0).to_string(),
+                proc.cwd.clone().unwrap_or(String::from("n/a")),
+                proc.exe.clone().unwrap_or(String::from("n/a")),
+                proc.cmd.clone().unwrap_or(String::from("n/a")),
+            ];
+
+            let row = row.into_iter().map(|r| Cell::new(r)).collect::<Row>();
+
+            let proc_table_header = [
+                "pid",
+                "start_time",
+                "run_time",
+                "disk_usage_read",
+                "disk_usage_written",
+                "open_files",
+                "open_files_limit",
+                "cwd",
+                "exe",
+                "cmd",
+            ]
+            .into_iter()
+            .map(|h| Cell::new(h))
+            .collect::<Row>()
+            .style(Style::default().fg(Color::Blue))
+            .bold()
+            .height(1);
+
             let popup_block = Block::default()
-                .title("bruh")
                 .borders(Borders::NONE)
+                .title(proc.name.clone().expect("no proc name"))
                 .style(Style::default().bg(Color::Black));
-            let area = centered_rect(60, 25, frame.area());
+
+            let area = centered_rect(80, 50, frame.area());
+
+            let t = Table::new(
+                std::iter::once(row),
+                [
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(7),
+                    Constraint::Length(20),
+                    Constraint::Length(20),
+                    Constraint::Length(20),
+                ],
+            )
+            .header(proc_table_header)
+            .block(popup_block);
+
             frame.render_widget(Clear, area);
-            frame.render_widget(popup_block, area);
+            frame.render_widget(t, area);
         }
         _ => {}
     }
@@ -182,7 +244,7 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
             process.pid.to_string(),
             process.name.clone().unwrap_or(String::from("n/a")),
             memory.to_string() + " mb",
-            process.cpu_usage.to_string(),
+            process.cpu_usage.to_string() + "%",
             match process.uid {
                 Some(x) => x.to_string(),
                 None => String::from("n/a"),
