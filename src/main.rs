@@ -6,10 +6,8 @@ pub mod ram;
 pub mod state;
 pub mod ui;
 
-use std::{
-    io::{self, Result},
-    time::Duration,
-};
+use std::io::{self, Result};
+use std::time::{Duration, Instant};
 
 use ratatui::{
     crossterm::{
@@ -46,6 +44,9 @@ fn main() -> Result<()> {
 }
 
 fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<()> {
+    let mut elapsed = Instant::now();
+    let refresh_interval = Duration::new(1, 0);
+
     while !state.exit {
         terminal.draw(|f| ui(f, state))?;
 
@@ -58,7 +59,10 @@ fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<
             }
         }
 
-        state.refresh_procs();
+        if elapsed.elapsed() >= refresh_interval {
+            state.refresh_procs();
+            elapsed = Instant::now();
+        }
     }
 
     Ok(())
