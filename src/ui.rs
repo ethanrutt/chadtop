@@ -4,7 +4,9 @@ use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
-    widgets::{Block, Borders, Cell, Clear, HighlightSpacing, Paragraph, Row, Table},
+    widgets::{
+        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph, Row, Table,
+    },
     Frame,
 };
 
@@ -28,7 +30,6 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     match state.current_screen {
         CurrentScreen::Kill => {
-            // FIXME: make this a list instead of a table
             let proc_idx = state
                 .processes
                 .iter()
@@ -36,67 +37,60 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
             let proc = &state.processes[proc_idx.expect("no proc index")];
 
-            let row = [
-                proc.pid.to_string(),
-                proc.start_time.to_string(),
-                proc.run_time.to_string(),
-                proc.disk_usage_read.to_string(),
-                proc.disk_usage_written.to_string(),
-                proc.open_files.unwrap_or(0).to_string(),
-                proc.open_files_limit.unwrap_or(0).to_string(),
-                proc.cwd.clone().unwrap_or(String::from("n/a")),
-                proc.exe.clone().unwrap_or(String::from("n/a")),
-                proc.cmd.clone().unwrap_or(String::from("n/a")),
-            ];
+            let mut pid = proc.pid.to_string();
+            pid.insert_str(0, "pid: ");
 
-            let row = row.into_iter().map(|r| Cell::new(r)).collect::<Row>();
+            let mut start_time = proc.start_time.to_string();
+            start_time.insert_str(0, "start time: ");
 
-            let proc_table_header = [
-                "pid",
-                "start_time",
-                "run_time",
-                "disk_usage_read",
-                "disk_usage_written",
-                "open_files",
-                "open_files_limit",
-                "cwd",
-                "exe",
-                "cmd",
-            ]
-            .into_iter()
-            .map(|h| Cell::new(h))
-            .collect::<Row>()
-            .style(Style::default().fg(Color::Blue))
-            .bold()
-            .height(1);
+            let mut run_time = proc.run_time.to_string();
+            run_time.insert_str(0, "run time: ");
+
+            let mut disk_usage_read = proc.disk_usage_read.to_string();
+            disk_usage_read.insert_str(0, "disk read: ");
+
+            let mut disk_usage_written = proc.disk_usage_written.to_string();
+            disk_usage_written.insert_str(0, "disk written: ");
+
+            let mut open_files = proc.open_files.unwrap_or(0).to_string();
+            open_files.insert_str(0, "open files: ");
+
+            let mut open_files_limit = proc.open_files_limit.unwrap_or(0).to_string();
+            open_files_limit.insert_str(0, "open files limit: ");
+
+            let mut cwd = proc.cwd.clone().unwrap_or(String::from("n/a"));
+            cwd.insert_str(0, "cwd: ");
+
+            let mut exe = proc.exe.clone().unwrap_or(String::from("n/a"));
+            exe.insert_str(0, "exe: ");
+
+            let mut cmd = proc.cmd.clone().unwrap_or(String::from("n/a"));
+            cmd.insert_str(0, "cmd: ");
+
+            let items: Vec<ListItem> = Vec::from([
+                ListItem::from(pid),
+                ListItem::from(start_time),
+                ListItem::from(run_time),
+                ListItem::from(disk_usage_read),
+                ListItem::from(disk_usage_written),
+                ListItem::from(open_files),
+                ListItem::from(open_files_limit),
+                ListItem::from(cwd),
+                ListItem::from(exe),
+                ListItem::from(cmd),
+            ]);
 
             let popup_block = Block::default()
                 .borders(Borders::NONE)
-                .title(proc.name.clone().expect("no proc name"))
+                .title(proc.name.clone().unwrap_or(String::from("no proc name")))
                 .style(Style::default().bg(Color::Black));
 
-            let area = centered_rect(80, 50, frame.area());
+            let area = signal_menu_rect(60, frame.area());
 
-            let t = Table::new(
-                std::iter::once(row),
-                [
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(7),
-                    Constraint::Length(20),
-                    Constraint::Length(20),
-                    Constraint::Length(20),
-                ],
-            )
-            .header(proc_table_header)
-            .block(popup_block);
+            let l = List::new(items).block(popup_block);
 
             frame.render_widget(Clear, area);
-            frame.render_widget(t, area);
+            frame.render_widget(l, area);
         }
         _ => {}
     }
@@ -295,6 +289,30 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_y) / 2),
             Constraint::Percentage(percent_y),
             Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+/// helper function, similar to `centered_rect`, but has a constant y value since we need our
+/// signal_menu and other stuff rendered there to take a constant amount of space on the y axis
+fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(15),
+            Constraint::Fill(1),
         ])
         .split(r);
 
