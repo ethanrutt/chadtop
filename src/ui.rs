@@ -136,9 +136,7 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let keybinds = Paragraph::new(Text::styled(
         "(q) quit | (j) navigate down processes | (k) navigate up processes
 (g) go to first process | (G) go to last process
-(s) cycle next sort strategy
-(d) bring up signals menu for current selected process
-        ",
+(s) cycle next sort strategy | (d) more proc info",
         Style::default(),
     ))
     .left_aligned()
@@ -225,7 +223,7 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         )
         .borders(Borders::TOP);
 
-    let process_table_header = ["pid", "name", "memory", "cpu usage", "uid", "ppid"]
+    let process_table_header = ["pid", "name", "memory", "cpu usage", "user", "ppid"]
         .into_iter()
         .map(|h| Cell::new(h))
         .collect::<Row>()
@@ -241,8 +239,8 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
             process.name.clone().unwrap_or(String::from("n/a")),
             memory.to_string() + " mb",
             process.cpu_usage.to_string() + "%",
-            match process.uid {
-                Some(x) => x.to_string(),
+            match &process.user {
+                Some(x) => x.clone(),
                 None => String::from("n/a"),
             },
             match process.ppid {
@@ -262,12 +260,11 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         rows,
         [
             Constraint::Length(7),
-            Constraint::Length(20),
-            Constraint::Length(20),
+            Constraint::Length(30),
+            Constraint::Length(15),
             Constraint::Length(10),
-            Constraint::Length(6),
-            Constraint::Length(9),
-            Constraint::Length(6),
+            Constraint::Length(20),
+            Constraint::Length(7),
         ],
     )
     .header(process_table_header)
@@ -290,7 +287,7 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
-            Constraint::Length(12),
+            Constraint::Length(11),
             Constraint::Fill(1),
         ])
         .split(r);

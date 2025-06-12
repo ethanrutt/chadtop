@@ -1,4 +1,4 @@
-use sysinfo::{DiskUsage, System};
+use sysinfo::{DiskUsage, System, Users};
 
 pub struct Proc {
     pub name: Option<String>,
@@ -13,32 +13,37 @@ pub struct Proc {
     pub cpu_usage: i32,
     pub disk_usage_read: u64,
     pub disk_usage_written: u64,
-    pub uid: Option<u32>,
+    pub user: Option<String>,
     pub open_files: Option<usize>,
     pub open_files_limit: Option<usize>,
 }
 
-pub fn read_procs(sys: &mut System) -> Vec<Proc> {
+pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
     sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
     let mut ret: Vec<Proc> = Vec::new();
 
     for (pid, proc) in sys.processes() {
         let name: Option<String> = proc.name().to_str().and_then(|s| Some(String::from(s)));
+
         let cmd: Option<String> = proc
             .cmd()
             .iter()
             .map(|s| s.to_str())
             .collect::<Option<Vec<&str>>>()
             .map(|v| v.join(" "));
+
         let exe: Option<String> = proc
             .exe()
             .and_then(|s| s.to_str())
             .and_then(|s| Some(String::from(s)));
+
         let pid: u32 = pid.as_u32();
+
         let cwd: Option<String> = proc
             .cwd()
             .and_then(|s| s.to_str())
             .and_then(|s| Some(String::from(s)));
+
         let memory: u64 = proc.virtual_memory();
         let ppid: Option<u32> = proc.parent().and_then(|n| Some(n.as_u32()));
         let start_time: u64 = proc.start_time();
@@ -47,13 +52,13 @@ pub fn read_procs(sys: &mut System) -> Vec<Proc> {
         let disk_usage: DiskUsage = proc.disk_usage();
         let disk_usage_read: u64 = disk_usage.total_read_bytes;
         let disk_usage_written: u64 = disk_usage.total_written_bytes;
-        let uid: Option<u32> = proc.user_id().and_then(|u| {
-            Some(
-                u.to_string()
-                    .parse::<u32>()
-                    .expect("unable to parse user id"),
-            )
-        });
+
+        users.refresh();
+        let user = proc
+            .user_id()
+            .and_then(|u| users.get_user_by_id(u))
+            .and_then(|u| Some(String::from(u.name())));
+
         let open_files: Option<usize> = proc.open_files();
         let open_files_limit: Option<usize> = proc.open_files_limit();
 
@@ -70,7 +75,7 @@ pub fn read_procs(sys: &mut System) -> Vec<Proc> {
             cpu_usage,
             disk_usage_read,
             disk_usage_written,
-            uid,
+            user,
             open_files,
             open_files_limit,
         })

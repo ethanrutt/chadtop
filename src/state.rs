@@ -1,5 +1,5 @@
 use std::fmt::{self, Display};
-use sysinfo::{ProcessRefreshKind, RefreshKind, System};
+use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 
 use crate::proc::{read_procs, Proc};
 use ratatui::{
@@ -15,7 +15,7 @@ pub enum CurrentScreen {
 }
 
 pub enum ProcessSortStrategy {
-    Uid,
+    User,
     Pid,
     Ppid,
     CpuUsage,
@@ -26,7 +26,7 @@ pub enum ProcessSortStrategy {
 impl Display for ProcessSortStrategy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
-            ProcessSortStrategy::Uid => "uid",
+            ProcessSortStrategy::User => "user",
             ProcessSortStrategy::Pid => "pid",
             ProcessSortStrategy::Ppid => "ppid",
             ProcessSortStrategy::CpuUsage => "cpu usage",
@@ -41,7 +41,7 @@ impl Display for ProcessSortStrategy {
 impl ProcessSortStrategy {
     pub fn get_color(&self) -> Color {
         match self {
-            ProcessSortStrategy::Uid => Color::Cyan,
+            ProcessSortStrategy::User => Color::Cyan,
             ProcessSortStrategy::Pid => Color::Magenta,
             ProcessSortStrategy::Ppid => Color::Yellow,
             ProcessSortStrategy::CpuUsage => Color::Green,
@@ -54,6 +54,7 @@ impl ProcessSortStrategy {
 pub struct State {
     pub exit: bool,
     pub sys: System,
+    pub users: Users,
     pub processes: Vec<Proc>,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
@@ -68,6 +69,7 @@ impl State {
             sys: System::new_with_specifics(
                 RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
             ),
+            users: Users::new_with_refreshed_list(),
             processes: Vec::new(),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
@@ -102,17 +104,16 @@ impl State {
                 KeyCode::Esc => self.select_none(),
                 _ => {}
             },
-            CurrentScreen::Kill => match key.code {
+            CurrentScreen::ProcInfo => match key.code {
                 KeyCode::Char('d') => self.current_screen = CurrentScreen::Main,
                 _ => {}
             },
-            CurrentScreen::KillConfirm => {}
         }
     }
 
     pub fn next_sort_strategy(&mut self) {
         match self.process_sort_strategy {
-            ProcessSortStrategy::Uid => self.process_sort_strategy = ProcessSortStrategy::Pid,
+            ProcessSortStrategy::User => self.process_sort_strategy = ProcessSortStrategy::Pid,
             ProcessSortStrategy::Pid => self.process_sort_strategy = ProcessSortStrategy::Ppid,
             ProcessSortStrategy::Ppid => self.process_sort_strategy = ProcessSortStrategy::CpuUsage,
             ProcessSortStrategy::CpuUsage => {
@@ -121,15 +122,16 @@ impl State {
             ProcessSortStrategy::Alphabetical => {
                 self.process_sort_strategy = ProcessSortStrategy::Memory
             }
-            ProcessSortStrategy::Memory => self.process_sort_strategy = ProcessSortStrategy::Uid,
-        }
+            ProcessSortStrategy::Memory => self.process_sort_strategy = ProcessSortStrategy::User,
+        };
+        self.refresh_procs();
     }
 
     pub fn refresh_procs(&mut self) {
-        self.processes = read_procs(&mut self.sys);
+        self.processes = read_procs(&mut self.sys, &mut self.users);
 
         match self.process_sort_strategy {
-            ProcessSortStrategy::Uid => self.processes.sort_by_key(|p| p.uid.clone()),
+            ProcessSortStrategy::User => self.processes.sort_by_key(|p| p.user.clone()),
             ProcessSortStrategy::Pid => self.processes.sort_by_key(|p| p.pid),
             ProcessSortStrategy::Ppid => self.processes.sort_by_key(|p| p.ppid),
             ProcessSortStrategy::CpuUsage => self.processes.sort_by_key(|p| p.cpu_usage),
