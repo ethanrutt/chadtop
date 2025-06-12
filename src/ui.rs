@@ -23,22 +23,21 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     let body_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)])
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(2),
+            Constraint::Percentage(90),
+        ])
         .split(chunks[1]);
 
     let filter_block = Block::default().borders(Borders::BOTTOM);
 
-    // do this above and then have the actual filter that changes with text below
-    // ┏•┓
-    // ╋┓┃╋┏┓┏┓
-    // ┛┗┗┗┗ ┛
+    // FIXME: after implementing state.filter, we the below line will be "f :> " +
+    // state.filter_text and also change color and maybe have underline or cursor when active
+    let filter_text = Paragraph::new("f :> ").left_aligned().block(filter_block);
+    frame.render_widget(filter_text, body_chunks[1]);
 
-    let filter_text = Paragraph::new("filter :> bruh")
-        .centered()
-        .block(filter_block);
-    frame.render_widget(filter_text, body_chunks[0]);
-
-    render_proc_list(frame, body_chunks[1], state);
+    render_proc_list(frame, body_chunks[2], state);
 
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
