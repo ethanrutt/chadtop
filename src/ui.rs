@@ -26,6 +26,18 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         .constraints([Constraint::Percentage(10), Constraint::Percentage(90)])
         .split(chunks[1]);
 
+    let filter_block = Block::default().borders(Borders::BOTTOM);
+
+    // do this above and then have the actual filter that changes with text below
+    // ┏•┓
+    // ╋┓┃╋┏┓┏┓
+    // ┛┗┗┗┗ ┛
+
+    let filter_text = Paragraph::new("filter :> bruh")
+        .centered()
+        .block(filter_block);
+    frame.render_widget(filter_text, body_chunks[0]);
+
     render_proc_list(frame, body_chunks[1], state);
 
     match state.current_screen {
@@ -44,8 +56,8 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
         .flex(Flex::Center)
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
+            Constraint::Percentage(7),
+            Constraint::Percentage(13),
             Constraint::Percentage(80),
         ])
         .split(chunks[0]);
@@ -56,7 +68,6 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 
     let title = Paragraph::new(Text::styled(
         "
-
 ┏┣┓┏┓┏┫╋┏┓┏┓
 ┗┛┗┗┻┗┻┗┗┛┣┛
         ",
@@ -214,6 +225,10 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     frame.render_stateful_widget(t, chunk, &mut state.processes_state);
 }
 
+/// renders the additional info about a process
+///
+/// # Assumptions
+/// That the state.CurrentScreen is set to ProcInfo and there is a pid in state.current_pid_watch
 fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
     let proc_idx = state
         .processes
