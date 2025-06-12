@@ -10,8 +10,7 @@ use ratatui::{
 
 pub enum CurrentScreen {
     Main,
-    Kill,
-    KillConfirm,
+    ProcInfo,
 }
 
 pub enum ProcessSortStrategy {
@@ -93,7 +92,7 @@ impl State {
                     match self.processes_state.selected() {
                         Some(idx) => {
                             self.current_pid_watch = Some(self.processes[idx].pid);
-                            self.current_screen = CurrentScreen::Kill;
+                            self.current_screen = CurrentScreen::ProcInfo;
                         }
                         None => {
                             self.current_pid_watch = None;

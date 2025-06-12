@@ -29,13 +29,24 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
     render_proc_list(frame, body_chunks[1], state);
 
     match state.current_screen {
-        CurrentScreen::Kill => {
+        CurrentScreen::ProcInfo => {
             let proc_idx = state
                 .processes
                 .iter()
                 .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
 
-            let proc = &state.processes[proc_idx.expect("no proc index")];
+            let proc_idx = match proc_idx {
+                Some(x) => x,
+                None => {
+                    // if we can't find the process then we don't render this
+                    // anymore
+                    state.current_pid_watch = None;
+                    state.current_screen = CurrentScreen::Main;
+                    return;
+                }
+            };
+
+            let proc = &state.processes[proc_idx];
 
             let mut pid = proc.pid.to_string();
             pid.insert_str(0, "pid: ");
