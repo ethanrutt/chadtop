@@ -1,20 +1,27 @@
 # Chadtop
-This is yet another `top` clone. The purpose of this project is to learn more
-about the linux operating system and learn the rust programming language, so
-I'm fine with solving a problem that's been solved before.
+A process information tui written in rust
 
-Change of focus. Originally this was going to be a `top` clone, but since I
-don't have certain hardware and won't be able to handle some edge cases, I
-think instead i'm going to just make an in depth process inspector.
+<!-- put images here -->
 
-Scrapping hwinfo
+## Features
+- see processes
+- see thorough information about a process
+- sort by various things including cpu usage %, memory, name, pid, etc.
+- filter by process name
+- gigachad art
 
 ## TODO
-- switch back to sysinfo so we can also work on macos
-- table should be pid, name, mem, cpy usage, uid, ppid
-- sending signals menu
-- on signal menu also include start time, run time, disk usage, open files, open files limit, cwd, exe
-- fix spacing for new table
-- user instead of just uid
-- fuzzy filter
-- keep simple, single threaded, just get this out so we can do js to get familiar w it before work
+- fuzzy process filter by name
+- beautify ui with more colors and borders
+- clean up and write simple tests without `TestBackend` for now
+
+## Future Work
+- Have process list refresh in a separate thread for performance gains
+- add other stuff from `sysinfo` like total mem, total cpu usage, etc. in
+another popup
+- also send signals from process info popup menu (use centered_rect from ratatui json_editor)
+- ratatui tests using `TestBackend`
+
+## References
+- [ratatui.rs](https://ratatui.rs/)
+- [ascii art generator (specifically tmplr)](https://patorjk.com/software/taag/)
