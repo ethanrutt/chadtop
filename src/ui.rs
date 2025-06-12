@@ -29,82 +29,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
     render_proc_list(frame, body_chunks[1], state);
 
     match state.current_screen {
-        CurrentScreen::ProcInfo => {
-            let proc_idx = state
-                .processes
-                .iter()
-                .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
-
-            let proc_idx = match proc_idx {
-                Some(x) => x,
-                None => {
-                    // if we can't find the process then we don't render this
-                    // anymore
-                    state.current_pid_watch = None;
-                    state.current_screen = CurrentScreen::Main;
-                    return;
-                }
-            };
-
-            let proc = &state.processes[proc_idx];
-
-            let mut pid = proc.pid.to_string();
-            pid.insert_str(0, "pid: ");
-
-            let mut start_time = proc.start_time.to_string();
-            start_time.insert_str(0, "start time: ");
-
-            let mut run_time = proc.run_time.to_string();
-            run_time.insert_str(0, "run time: ");
-
-            let disk_usage_read = proc.disk_usage_read / 1000000;
-            let mut disk_usage_read = disk_usage_read.to_string() + " mb";
-            disk_usage_read.insert_str(0, "disk read: ");
-
-            let disk_usage_written = proc.disk_usage_written / 1000000;
-            let mut disk_usage_written = disk_usage_written.to_string() + " mb";
-            disk_usage_written.insert_str(0, "disk written: ");
-
-            let mut open_files = proc.open_files.unwrap_or(0).to_string();
-            open_files.insert_str(0, "open files: ");
-
-            let mut open_files_limit = proc.open_files_limit.unwrap_or(0).to_string();
-            open_files_limit.insert_str(0, "open files limit: ");
-
-            let mut cwd = proc.cwd.clone().unwrap_or(String::from("n/a"));
-            cwd.insert_str(0, "cwd: ");
-
-            let mut exe = proc.exe.clone().unwrap_or(String::from("n/a"));
-            exe.insert_str(0, "exe: ");
-
-            let mut cmd = proc.cmd.clone().unwrap_or(String::from("n/a"));
-            cmd.insert_str(0, "cmd: ");
-
-            let items: Vec<ListItem> = Vec::from([
-                ListItem::from(pid),
-                ListItem::from(start_time),
-                ListItem::from(run_time),
-                ListItem::from(disk_usage_read),
-                ListItem::from(disk_usage_written),
-                ListItem::from(open_files),
-                ListItem::from(open_files_limit),
-                ListItem::from(cwd),
-                ListItem::from(exe),
-                ListItem::from(cmd),
-            ]);
-
-            let popup_block = Block::default()
-                .borders(Borders::NONE)
-                .title(proc.name.clone().unwrap_or(String::from("no proc name")))
-                .style(Style::default().bg(Color::Black));
-
-            let area = signal_menu_rect(70, frame.area());
-
-            let l = List::new(items).block(popup_block);
-
-            frame.render_widget(Clear, area);
-            frame.render_widget(l, area);
-        }
+        CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
         _ => {}
     }
 }
@@ -287,6 +212,83 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     .block(process_block);
 
     frame.render_stateful_widget(t, chunk, &mut state.processes_state);
+}
+
+fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
+    let proc_idx = state
+        .processes
+        .iter()
+        .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
+
+    let proc_idx = match proc_idx {
+        Some(x) => x,
+        None => {
+            // if we can't find the process then we don't render this
+            // anymore
+            state.current_pid_watch = None;
+            state.current_screen = CurrentScreen::Main;
+            return;
+        }
+    };
+
+    let proc = &state.processes[proc_idx];
+
+    let mut pid = proc.pid.to_string();
+    pid.insert_str(0, "pid: ");
+
+    let mut start_time = proc.start_time.to_string();
+    start_time.insert_str(0, "start time: ");
+
+    let mut run_time = proc.run_time.to_string();
+    run_time.insert_str(0, "run time: ");
+
+    let disk_usage_read = proc.disk_usage_read / 1000000;
+    let mut disk_usage_read = disk_usage_read.to_string() + " mb";
+    disk_usage_read.insert_str(0, "disk read: ");
+
+    let disk_usage_written = proc.disk_usage_written / 1000000;
+    let mut disk_usage_written = disk_usage_written.to_string() + " mb";
+    disk_usage_written.insert_str(0, "disk written: ");
+
+    let mut open_files = proc.open_files.unwrap_or(0).to_string();
+    open_files.insert_str(0, "open files: ");
+
+    let mut open_files_limit = proc.open_files_limit.unwrap_or(0).to_string();
+    open_files_limit.insert_str(0, "open files limit: ");
+
+    let mut cwd = proc.cwd.clone().unwrap_or(String::from("n/a"));
+    cwd.insert_str(0, "cwd: ");
+
+    let mut exe = proc.exe.clone().unwrap_or(String::from("n/a"));
+    exe.insert_str(0, "exe: ");
+
+    let mut cmd = proc.cmd.clone().unwrap_or(String::from("n/a"));
+    cmd.insert_str(0, "cmd: ");
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(pid),
+        ListItem::from(start_time),
+        ListItem::from(run_time),
+        ListItem::from(disk_usage_read),
+        ListItem::from(disk_usage_written),
+        ListItem::from(open_files),
+        ListItem::from(open_files_limit),
+        ListItem::from(cwd),
+        ListItem::from(exe),
+        ListItem::from(cmd),
+    ]);
+
+    let popup_block = Block::default()
+        .borders(Borders::NONE)
+        .title(proc.name.clone().unwrap_or(String::from("no proc name")))
+        .style(Style::default().bg(Color::Black));
+
+    let area = signal_menu_rect(70, frame.area());
+
+    let l = List::new(items).block(popup_block);
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(l, area);
 }
 
 /// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
