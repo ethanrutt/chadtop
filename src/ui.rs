@@ -46,10 +46,12 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
             let mut run_time = proc.run_time.to_string();
             run_time.insert_str(0, "run time: ");
 
-            let mut disk_usage_read = proc.disk_usage_read.to_string();
+            let disk_usage_read = proc.disk_usage_read / 1000000;
+            let mut disk_usage_read = disk_usage_read.to_string() + " mb";
             disk_usage_read.insert_str(0, "disk read: ");
 
-            let mut disk_usage_written = proc.disk_usage_written.to_string();
+            let disk_usage_written = proc.disk_usage_written / 1000000;
+            let mut disk_usage_written = disk_usage_written.to_string() + " mb";
             disk_usage_written.insert_str(0, "disk written: ");
 
             let mut open_files = proc.open_files.unwrap_or(0).to_string();
@@ -85,7 +87,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
                 .title(proc.name.clone().unwrap_or(String::from("no proc name")))
                 .style(Style::default().bg(Color::Black));
 
-            let area = signal_menu_rect(60, frame.area());
+            let area = signal_menu_rect(70, frame.area());
 
             let l = List::new(items).block(popup_block);
 
@@ -279,39 +281,16 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     frame.render_stateful_widget(t, chunk, &mut state.processes_state);
 }
 
-/// helper function to create a centered rect using up certain percentage of the available rect `r`
-/// taken from ratatui.rs json editor
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    // Cut the given rectangle into three vertical pieces
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
-
-    // Then cut the middle vertical piece into three width-wise pieces
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1] // Return the middle chunk
-}
-
-/// helper function, similar to `centered_rect`, but has a constant y value since we need our
-/// signal_menu and other stuff rendered there to take a constant amount of space on the y axis
+/// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
+/// constant y value since we need our signal_menu and other stuff rendered there to take a
+/// constant amount of space on the y axis
 fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
     // Cut the given rectangle into three vertical pieces
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
-            Constraint::Length(15),
+            Constraint::Length(12),
             Constraint::Fill(1),
         ])
         .split(r);
