@@ -13,6 +13,7 @@ use ratatui::{
 pub enum CurrentScreen {
     Main,
     ProcInfo,
+    Filter,
 }
 
 pub enum ProcessSortStrategy {
@@ -62,6 +63,7 @@ pub struct State {
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
     pub current_pid_watch: Option<u32>,
+    pub filter: String,
 }
 
 impl State {
@@ -77,6 +79,7 @@ impl State {
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
             current_pid_watch: None,
+            filter: String::new(),
         };
         new.refresh_procs();
         new
@@ -91,6 +94,7 @@ impl State {
                 KeyCode::Char('g') => self.first(),
                 KeyCode::Char('G') => self.last(),
                 KeyCode::Char('s') => self.next_sort_strategy(),
+                KeyCode::Esc => self.select_none(),
                 KeyCode::Char('d') => {
                     match self.processes_state.selected() {
                         Some(idx) => {
@@ -103,11 +107,23 @@ impl State {
                         }
                     };
                 }
-                KeyCode::Esc => self.select_none(),
+                KeyCode::Char('f') => self.current_screen = CurrentScreen::Filter,
                 _ => {}
             },
             CurrentScreen::ProcInfo => match key.code {
                 KeyCode::Char('d') => self.current_screen = CurrentScreen::Main,
+                _ => {}
+            },
+            CurrentScreen::Filter => match key.code {
+                KeyCode::Esc => self.current_screen = CurrentScreen::Main,
+                KeyCode::Char(value) => {
+                    self.filter.push(value);
+                    self.refresh_procs();
+                }
+                KeyCode::Backspace => {
+                    self.filter.pop();
+                    self.refresh_procs();
+                }
                 _ => {}
             },
         }
@@ -131,6 +147,13 @@ impl State {
 
     pub fn refresh_procs(&mut self) {
         self.processes = read_procs(&mut self.sys, &mut self.users);
+
+        if self.filter.len() > 0 {
+            self.processes.retain(|p| {
+                let name = p.name.clone().unwrap_or(String::new());
+                name.starts_with(&self.filter)
+            });
+        }
 
         match self.process_sort_strategy {
             ProcessSortStrategy::User => self.processes.sort_by_key(|p| p.user.clone()),

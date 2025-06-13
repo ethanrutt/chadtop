@@ -34,8 +34,19 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     // FIXME: after implementing state.filter, we the below line will be "f :> " +
     // state.filter_text and also change color and maybe have underline or cursor when active
-    let filter_text = Paragraph::new("f :> ").left_aligned().block(filter_block);
-    frame.render_widget(filter_text, body_chunks[1]);
+    let filter_color = match state.current_screen {
+        CurrentScreen::Filter => Color::LightRed,
+        _ => Color::White,
+    };
+
+    let filter_paragraph = Paragraph::new(Text::styled(
+        String::from("f :> ") + &state.filter.clone(),
+        Style::default().fg(filter_color),
+    ))
+    .left_aligned()
+    .block(filter_block);
+
+    frame.render_widget(filter_paragraph, body_chunks[1]);
 
     render_proc_list(frame, body_chunks[2], state);
 
