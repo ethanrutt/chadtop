@@ -1,7 +1,10 @@
 # Chadtop
-A process information tui written in rust
+A process information tui
+
+written for the chad devs in rust (btw) using neovim (btw) developed on arch linux (btw)
 
 <!-- put images here -->
+<!-- meme and put disclaimer that i am meming hella -->
 
 ## Features
 - see processes
@@ -14,13 +17,15 @@ A process information tui written in rust
 - thread for process updating using channels and close with arc mutex bool
 - change refresh proc in state to only sort
 - fuzzy process filter by name
-- beautify ui with more colors and borders
-- clean up and write simple tests without `TestBackend` for now
+- meme and beautify ui with more colors and borders
+- clean up code (ui) 
+- write simple tests without `TestBackend` for now
 - make readme chad af
 - add pictures
 - release v0.0.1
 - add other stuff from sysinfo
-- add signals to signals menu
+- add signals to signals menu and kill w shift + k
+- move keybinds to (h) and appear as a popup instead of always on main screen
 - tests using test backend
 - release v1.0.0
 
