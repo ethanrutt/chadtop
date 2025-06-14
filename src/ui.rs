@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{mem, rc::Rc};
 
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
@@ -52,6 +52,50 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
+        CurrentScreen::SysInfo => {
+            let mut total = state.ram.total.to_string();
+            total.insert_str(0, "total: ");
+
+            let mut free = state.ram.free.to_string();
+            free.insert_str(0, "free: ");
+
+            let mut available = state.ram.available.to_string();
+            available.insert_str(0, "available: ");
+
+            let mut used = state.ram.used.to_string();
+            used.insert_str(0, "used: ");
+
+            let mut total_swap = state.ram.total_swap.to_string();
+            total_swap.insert_str(0, "total_swap: ");
+
+            let mut free_swap = state.ram.free_swap.to_string();
+            free_swap.insert_str(0, "free_swap: ");
+
+            let mut used_swap = state.ram.used_swap.to_string();
+            used_swap.insert_str(0, "used_swap: ");
+
+            let mem_list_items: Vec<ListItem> = Vec::from([
+                ListItem::from(total),
+                ListItem::from(free),
+                ListItem::from(available),
+                ListItem::from(used),
+                ListItem::from(total_swap),
+                ListItem::from(free_swap),
+                ListItem::from(used_swap),
+            ]);
+
+            let popup_block = Block::default()
+                .borders(Borders::NONE)
+                .title("bruh")
+                .style(Style::default().bg(Color::Black));
+
+            let area = centered_rect(50, 50, frame.area());
+
+            let l = List::new(mem_list_items).block(popup_block);
+
+            frame.render_widget(Clear, area);
+            frame.render_widget(l, area);
+        }
         _ => {}
     }
 }
@@ -314,6 +358,28 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
 
     frame.render_widget(Clear, area);
     frame.render_widget(l, area);
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1] // Return the middle chunk
 }
 
 /// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a

@@ -18,8 +18,10 @@ pub struct Proc {
     pub open_files_limit: Option<usize>,
 }
 
+/// read procs
+/// before calling this make sure to refresh the System argument and make sure the Users argument
+/// is populated
 pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
-    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
     let mut ret: Vec<Proc> = Vec::new();
 
     for (pid, proc) in sys.processes() {

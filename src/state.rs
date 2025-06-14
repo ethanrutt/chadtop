@@ -1,7 +1,10 @@
 use std::fmt::{self, Display};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 
-use crate::proc::{read_procs, Proc};
+use crate::{
+    proc::{read_procs, Proc},
+    ram::{read_memory, Ram},
+};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     style::Color,
@@ -14,6 +17,7 @@ pub enum CurrentScreen {
     Main,
     ProcInfo,
     Filter,
+    SysInfo,
 }
 
 pub enum ProcessSortStrategy {
@@ -59,6 +63,7 @@ pub struct State {
     pub sys: System,
     pub users: Users,
     pub processes: Vec<Proc>,
+    pub ram: Ram,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
@@ -70,18 +75,17 @@ impl State {
     pub fn new() -> State {
         let mut new = State {
             exit: false,
-            sys: System::new_with_specifics(
-                RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
-            ),
+            sys: System::new_all(),
             users: Users::new_with_refreshed_list(),
             processes: Vec::new(),
+            ram: Ram::new(),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
             current_pid_watch: None,
             filter: String::new(),
         };
-        new.refresh_procs();
+        new.refresh();
         new
     }
 
@@ -107,6 +111,7 @@ impl State {
                         }
                     };
                 }
+                KeyCode::Char('i') => self.current_screen = CurrentScreen::SysInfo,
                 KeyCode::Char('f') => self.current_screen = CurrentScreen::Filter,
                 _ => {}
             },
@@ -124,6 +129,10 @@ impl State {
                     self.filter.pop();
                     self.refresh_procs();
                 }
+                _ => {}
+            },
+            CurrentScreen::SysInfo => match key.code {
+                KeyCode::Char('i') => self.current_screen = CurrentScreen::Main,
                 _ => {}
             },
         }
@@ -145,7 +154,14 @@ impl State {
         self.refresh_procs();
     }
 
-    pub fn refresh_procs(&mut self) {
+    pub fn refresh(&mut self) {
+        // FIXME: initialize and make sure we only have what we need
+        self.sys.refresh_all();
+        self.refresh_procs();
+        self.ram = read_memory(&mut self.sys);
+    }
+
+    fn refresh_procs(&mut self) {
         self.processes = read_procs(&mut self.sys, &mut self.users);
 
         if self.filter.len() > 0 {
