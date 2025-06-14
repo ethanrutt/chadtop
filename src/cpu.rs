@@ -1,72 +1,25 @@
-use std::fs;
+use sysinfo::System;
 
-pub struct CpuCore {
-    pub processor_number: i8,
-    pub ghz: f64,
-}
-
-pub struct CpuInfo {
+pub struct CpuUsage {
     pub name: String,
-    pub cores: Vec<CpuCore>,
+    pub usage: f32,
 }
 
+/// before calling this function make sure to refresh sys with the cpu values
+pub fn read_cpus(sys: &mut System) -> Vec<CpuUsage> {
+    let mut ret: Vec<CpuUsage> = Vec::new();
 
-pub fn read_cpuinfo() -> CpuInfo {
-    let contents = fs::read_to_string("/proc/cpuinfo")
-        .expect("Should have been able to read the file");
+    ret.push(CpuUsage {
+        name: String::from("overall"),
+        usage: sys.global_cpu_usage(),
+    });
 
-    let lines = contents.split("\n");
-
-    let mut core_info = CpuInfo {
-        name: String::from("not yet parsed"),
-        cores: Vec::<CpuCore>::new(),
-    };
-
-    let mut curr_core = CpuCore {
-        processor_number: -1,
-        ghz: -1.0,
-    };
-
-    for line in lines {
-        let cols = line.split(":").collect::<Vec<_>>();
-
-        if cols[0].trim() == "model name" {
-            core_info.name = cols[1].trim().parse().expect("mode name not a string");
-        }
-        else if cols[0].trim() == "processor" {
-            curr_core.processor_number = cols[1].trim().parse().expect("processor not a number");
-        }
-        else if cols[0].trim() == "cpu MHz" {
-            curr_core.ghz = cols[1].trim().parse().expect("cpu MHz not a number");
-            curr_core.ghz /= 1000.0;
-        }
-        else if line.is_empty() {
-            if curr_core.processor_number != -1 {
-                core_info.cores.push(curr_core);
-            }
-            curr_core = CpuCore {
-                processor_number: -1,
-                ghz: -1.0,
-            };
-        }
+    for cpu in sys.cpus() {
+        ret.push(CpuUsage {
+            name: String::from(cpu.name()),
+            usage: cpu.cpu_usage(),
+        });
     }
 
-    core_info
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_read_cpu() {
-        let core_info = read_cpuinfo();
-
-        assert_ne!(core_info.name, "not yet parsed");
-
-        for core in core_info.cores {
-            assert_ne!(core.processor_number, -1);
-            assert_ne!(core.ghz, -1.0);
-        }
-    }
+    ret
 }

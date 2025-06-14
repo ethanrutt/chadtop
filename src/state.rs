@@ -2,8 +2,7 @@ use std::fmt::{self, Display};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
 
 use crate::{
-    proc::{read_procs, Proc},
-    ram::{read_memory, Ram},
+    cpu::{read_cpus, CpuUsage}, info::{read_info, Info}, proc::{read_procs, Proc}, ram::{read_memory, Ram}
 };
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -63,7 +62,9 @@ pub struct State {
     pub sys: System,
     pub users: Users,
     pub processes: Vec<Proc>,
+    pub cpus: Vec<CpuUsage>,
     pub ram: Ram,
+    pub info: Info,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
@@ -78,7 +79,9 @@ impl State {
             sys: System::new_all(),
             users: Users::new_with_refreshed_list(),
             processes: Vec::new(),
+            cpus: Vec::new(),
             ram: Ram::new(),
+            info: read_info(),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
@@ -159,6 +162,7 @@ impl State {
         self.sys.refresh_all();
         self.refresh_procs();
         self.ram = read_memory(&mut self.sys);
+        self.cpus = read_cpus(&mut self.sys);
     }
 
     fn refresh_procs(&mut self) {

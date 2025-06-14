@@ -5,7 +5,8 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
-        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph, Row, Table,
+        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Padding, Paragraph, Row,
+        Table,
     },
     Frame,
 };
@@ -53,6 +54,78 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
         CurrentScreen::SysInfo => {
+            // SysInfo
+            // cpu mem
+            let area = centered_rect(50, 50, frame.area());
+            frame.render_widget(Clear, area);
+
+            let hsplit = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(7), Constraint::Fill(1)])
+                .split(area);
+            let bottom_vsplit = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(hsplit[1]);
+
+            let mut os = state
+                .info
+                .long_os_version
+                .clone()
+                .unwrap_or(String::from("unknown"));
+            os.insert_str(0, "os: ");
+
+            let mut kernel = state.info.kernel_long_version.clone();
+            kernel.insert_str(0, "kernel: ");
+
+            let mut hostname = state
+                .info
+                .host_name
+                .clone()
+                .unwrap_or(String::from("unknown"));
+            hostname.insert_str(0, "hostname: ");
+
+            let mut cpu_arch = state.info.cpu_arch.clone();
+            cpu_arch.insert_str(0, "architecture: ");
+
+            let mut physical_core_count = state.info.physical_core_count.unwrap_or(0).to_string();
+            physical_core_count.insert_str(0, "physical cores: ");
+
+            let items: Vec<ListItem> = Vec::from([
+                ListItem::from(Text::raw(os).centered()),
+                ListItem::from(Text::raw(kernel).centered()),
+                ListItem::from(Text::raw(hostname).centered()),
+                ListItem::from(Text::raw(cpu_arch).centered()),
+                ListItem::from(Text::raw(physical_core_count).centered()),
+            ]);
+
+            let popup_block = Block::default()
+                .borders(Borders::ALL)
+                .title("system info")
+                .style(Style::default().bg(Color::Black));
+
+            let l = List::new(items).block(popup_block);
+
+            frame.render_widget(l, hsplit[0]);
+
+            let items: Vec<ListItem> = state
+                .cpus
+                .iter()
+                .map(|cpu| {
+                    ListItem::from(
+                        Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).centered(),
+                    )
+                })
+                .collect();
+
+            let popup_block = Block::default()
+                .borders(Borders::ALL)
+                .title("cpu")
+                .style(Style::default().bg(Color::Black));
+
+            let l = List::new(items).block(popup_block);
+            frame.render_widget(l, bottom_vsplit[0]);
+
             let mut total = state.ram.total.to_string();
             total.insert_str(0, "total: ");
 
@@ -75,26 +148,23 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
             used_swap.insert_str(0, "used_swap: ");
 
             let mem_list_items: Vec<ListItem> = Vec::from([
-                ListItem::from(total),
-                ListItem::from(free),
-                ListItem::from(available),
-                ListItem::from(used),
-                ListItem::from(total_swap),
-                ListItem::from(free_swap),
-                ListItem::from(used_swap),
+                ListItem::from(Text::raw(total).centered()),
+                ListItem::from(Text::raw(free).centered()),
+                ListItem::from(Text::raw(available).centered()),
+                ListItem::from(Text::raw(used).centered()),
+                ListItem::from(Text::raw(total_swap).centered()),
+                ListItem::from(Text::raw(free_swap).centered()),
+                ListItem::from(Text::raw(used_swap).centered()),
             ]);
 
             let popup_block = Block::default()
-                .borders(Borders::NONE)
-                .title("bruh")
+                .borders(Borders::ALL)
+                .title("memory")
                 .style(Style::default().bg(Color::Black));
-
-            let area = centered_rect(50, 50, frame.area());
 
             let l = List::new(mem_list_items).block(popup_block);
 
-            frame.render_widget(Clear, area);
-            frame.render_widget(l, area);
+            frame.render_widget(l, bottom_vsplit[1]);
         }
         _ => {}
     }
@@ -348,7 +418,7 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
     ]);
 
     let popup_block = Block::default()
-        .borders(Borders::NONE)
+        .borders(Borders::ALL)
         .title(proc.name.clone().unwrap_or(String::from("no proc name")))
         .style(Style::default().bg(Color::Black));
 
@@ -391,7 +461,7 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
-            Constraint::Length(11),
+            Constraint::Length(12),
             Constraint::Fill(1),
         ])
         .split(r);

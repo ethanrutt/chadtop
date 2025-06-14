@@ -1,8 +1,7 @@
 pub mod cpu;
-pub mod gpu;
-pub mod hdd;
 pub mod proc;
 pub mod ram;
+pub mod info;
 pub mod state;
 pub mod ui;
 
