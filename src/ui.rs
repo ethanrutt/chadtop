@@ -5,8 +5,8 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
-        block::Title, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph,
-        Row, Table,
+        block::Title, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Padding,
+        Paragraph, Row, Table,
     },
     Frame,
 };
@@ -45,16 +45,15 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 /// renders the title of chadtop
 ///
 /// # Assumptions
-/// We assume that the `chunks` parameter is a horizontal layout split into two parts, the first
-/// part being 33% and the second part being 67% of the screen
+/// We assume that the `chunks` parameter is a horizontal layout split into two parts
 fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let title_chunks = Layout::default()
         .flex(Flex::Center)
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(7),
-            Constraint::Percentage(13),
-            Constraint::Percentage(80),
+            Constraint::Length(5),
+            Constraint::Max(4),
+            Constraint::Fill(1),
         ])
         .split(chunks[0]);
 
@@ -72,24 +71,15 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     .centered()
     .block(title_block);
 
-    let keybinds_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
+    let welcome_block = Block::default().borders(Borders::NONE);
 
-    let keybinds = Paragraph::new(Text::styled(
-        "(q) quit | (j) navigate down processes | (k) navigate up processes
-(g) go to first process | (G) go to last process
-(s) cycle next sort strategy | (d) more proc info",
-        Style::default(),
-    ))
-    .left_aligned()
-    .block(keybinds_block);
+    let welcome = Paragraph::new(Text::raw("welcome to chadtop\npress (h)elp for keybinds"))
+        .centered()
+        .block(welcome_block);
 
-    let gigachad_block = Block::default()
-        .borders(Borders::NONE)
-        .style(Style::default());
+    let gigachad_block = Block::default().borders(Borders::NONE);
 
-    let gigachad_art = Paragraph::new(Text::styled(
+    let gigachad_art = Paragraph::new(Text::raw(
         "
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⣤⣄⡠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -129,13 +119,12 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 ⠛⠀⠀⠀⠀⠀⠠⠄⢀⡀⢀⣤⢠⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠿⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⠀⠈⠙⠀⠀⠀⠀⠀
 ⠀⠀⠀⣐⣂⣀⣀⠀⣶⣶⣾⢉⣴⢾⣿⣷⣤⣤⣤⣤⣠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡄⢀⣀⠀⠄⠈⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣦⡀⣀⣀⣀⣀⠀⢀
 ",
-        Style::default(),
     ))
     .centered()
     .block(gigachad_block);
 
     frame.render_widget(title, title_chunks[0]);
-    frame.render_widget(keybinds, title_chunks[1]);
+    frame.render_widget(welcome, title_chunks[1]);
     frame.render_widget(gigachad_art, title_chunks[2]);
 }
 
@@ -148,23 +137,17 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 ///
 /// We also assume that the argument `state` is already initialized
 fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
-    // right 67% of the screen chunk, split into the bottom 80% of the screen
-    let selected_row_style = Style::default()
-        .add_modifier(Modifier::REVERSED)
-        .fg(Color::Blue);
-    let selected_col_style = Style::default().fg(Color::DarkGray);
-    let selected_cell_style = Style::default()
-        .add_modifier(Modifier::REVERSED)
-        .fg(Color::DarkGray);
-
     let process_block = Block::new()
-        .title(Line::raw("processes").centered())
-        .title(
-            Line::raw(format!("{}", state.process_sort_strategy))
-                .centered()
-                .style(Style::default().fg(state.process_sort_strategy.get_color())),
-        )
-        .borders(Borders::TOP);
+        .title(Line::styled(
+            "processes",
+            Style::default().fg(Color::LightBlue),
+        ))
+        .title(Line::styled(
+            format!("{}", state.process_sort_strategy),
+            Style::default().fg(state.process_sort_strategy.get_color()),
+        ))
+        .borders(Borders::LEFT | Borders::TOP)
+        .padding(Padding::left(1));
 
     let process_table_header = ["pid", "name", "memory", "cpu usage", "user", "ppid"]
         .into_iter()
@@ -211,10 +194,12 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         ],
     )
     .header(process_table_header)
-    .row_highlight_style(selected_row_style)
-    .column_highlight_style(selected_col_style)
-    .cell_highlight_style(selected_cell_style)
-    .highlight_symbol(Text::from(vec![" > ".into()]))
+    .row_highlight_style(
+        Style::default()
+            .add_modifier(Modifier::REVERSED)
+            .fg(Color::Blue),
+    )
+    .highlight_symbol(Text::raw(" > "))
     .highlight_spacing(HighlightSpacing::Always)
     .block(process_block);
 
@@ -300,10 +285,10 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
 }
 
 fn render_filter(frame: &mut Frame, chunk: Rect, state: &mut State) {
-    let filter_block = Block::default().borders(Borders::BOTTOM);
+    let filter_block = Block::default().borders(Borders::BOTTOM | Borders::LEFT);
 
     let filter_color = match state.current_screen {
-        CurrentScreen::Filter => Color::LightRed,
+        CurrentScreen::Filter => Color::LightMagenta,
         _ => Color::White,
     };
 
@@ -381,7 +366,9 @@ fn render_sysinfo_cpu(frame: &mut Frame, chunk: Rect, state: &mut State) {
         .cpus
         .iter()
         .map(|cpu| {
-            ListItem::from(Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).left_aligned())
+            ListItem::from(
+                Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).left_aligned(),
+            )
         })
         .collect();
 
