@@ -1,5 +1,5 @@
 use std::fmt::{self, Display};
-use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
+use sysinfo::{System, Users};
 
 use crate::{
     cpu::{read_cpus, CpuUsage}, info::{read_info, Info}, proc::{read_procs, Proc}, ram::{read_memory, Ram}

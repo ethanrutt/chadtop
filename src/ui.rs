@@ -1,12 +1,11 @@
-use std::{mem, rc::Rc};
+use std::rc::Rc;
 
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
-        block::Title, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Padding,
-        Paragraph, Row, Table,
+        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph, Row, Table,
     },
     Frame,
 };
