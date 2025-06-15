@@ -1,67 +1,44 @@
-use std::fs;
+use sysinfo::System;
 
-pub struct RamInfo {
-    pub total: f64,
-    pub free: f64,
-    pub available: f64,
-    pub cached: f64
+pub struct Ram {
+    pub total: u64,
+    pub free: u64,
+    pub available: u64,
+    pub used: u64,
+    pub total_swap: u64,
+    pub free_swap: u64,
+    pub used_swap: u64,
 }
 
-fn trim_units(s: &str) -> String {
-    let ret = String::from(s);
-    let ret = ret.trim();
-
-    String::from(&ret[0..ret.find(" ").expect("no space in unit string")])
-}
-
-pub fn read_raminfo() -> RamInfo {
-    let contents = fs::read_to_string("/proc/meminfo")
-        .expect("Should have been able to read the file");
-
-    let lines = contents.split("\n");
-
-    let mut ram_info = RamInfo {
-        total: -1.0,
-        free: -1.0,
-        available: -1.0,
-        cached: -1.0,
-    };
-
-    for line in lines {
-        let cols = line.split(":").collect::<Vec<_>>();
-
-        if cols[0].trim() == "MemTotal" {
-            ram_info.total = trim_units(cols[1]).parse().expect("Can't parse into MemTotal");
-            ram_info.total /= 1000000.0
-        }
-        else if cols[0].trim() == "MemFree" {
-            ram_info.free = trim_units(cols[1]).parse().expect("Can't parse into MemFree");
-            ram_info.free /= 1000000.0
-        }
-        else if cols[0].trim() == "MemAvailable" {
-            ram_info.available = trim_units(cols[1]).parse().expect("Can't parse into MemAvailable");
-            ram_info.available /= 1000000.0
-        }
-        else if cols[0].trim() == "Cached" {
-            ram_info.cached = trim_units(cols[1]).parse().expect("Can't parse into Cached");
-            ram_info.cached /= 1000000.0
+impl Ram {
+    pub fn new() -> Ram {
+        Ram {
+            total: 0,
+            free: 0,
+            available: 0,
+            used: 0,
+            total_swap: 0,
+            free_swap: 0,
+            used_swap: 0,
         }
     }
-
-    ram_info
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_read_ram() {
-        let ram_info = read_raminfo();
-
-        assert_ne!(ram_info.total, -1.0);
-        assert_ne!(ram_info.free, -1.0);
-        assert_ne!(ram_info.available, -1.0);
-        assert_ne!(ram_info.cached, -1.0);
+pub fn read_memory(sys: &mut System) -> Ram {
+    let total = sys.total_memory();
+    let free = sys.free_memory();
+    let available = sys.available_memory();
+    let used = sys.used_memory();
+    let total_swap = sys.total_swap();
+    let free_swap = sys.free_swap();
+    let used_swap = sys.used_swap();
+    Ram {
+        total,
+        free,
+        available,
+        used,
+        total_swap,
+        free_swap,
+        used_swap,
     }
 }

@@ -1,7 +1,9 @@
 use std::fmt::{self, Display};
-use sysinfo::{ProcessRefreshKind, RefreshKind, System, Users};
+use sysinfo::{System, Users};
 
-use crate::proc::{read_procs, Proc};
+use crate::{
+    cpu::{read_cpus, CpuUsage}, info::{read_info, Info}, proc::{read_procs, Proc}, ram::{read_memory, Ram}
+};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
     style::Color,
@@ -11,6 +13,8 @@ use ratatui::{
 pub enum CurrentScreen {
     Main,
     ProcInfo,
+    Filter,
+    SysInfo,
 }
 
 pub enum ProcessSortStrategy {
@@ -50,32 +54,39 @@ impl ProcessSortStrategy {
     }
 }
 
+// FIXME: add filter member that handles the filter text
 pub struct State {
     pub exit: bool,
     pub sys: System,
     pub users: Users,
     pub processes: Vec<Proc>,
+    pub cpus: Vec<CpuUsage>,
+    pub ram: Ram,
+    pub info: Info,
     pub processes_state: TableState,
     pub process_sort_strategy: ProcessSortStrategy,
     pub current_screen: CurrentScreen,
     pub current_pid_watch: Option<u32>,
+    pub filter: String,
 }
 
 impl State {
     pub fn new() -> State {
         let mut new = State {
             exit: false,
-            sys: System::new_with_specifics(
-                RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
-            ),
+            sys: System::new_all(),
             users: Users::new_with_refreshed_list(),
             processes: Vec::new(),
+            cpus: Vec::new(),
+            ram: Ram::new(),
+            info: read_info(),
             processes_state: TableState::default(),
             process_sort_strategy: ProcessSortStrategy::CpuUsage,
             current_screen: CurrentScreen::Main,
             current_pid_watch: None,
+            filter: String::new(),
         };
-        new.refresh_procs();
+        new.refresh();
         new
     }
 
@@ -88,6 +99,7 @@ impl State {
                 KeyCode::Char('g') => self.first(),
                 KeyCode::Char('G') => self.last(),
                 KeyCode::Char('s') => self.next_sort_strategy(),
+                KeyCode::Esc => self.select_none(),
                 KeyCode::Char('d') => {
                     match self.processes_state.selected() {
                         Some(idx) => {
@@ -100,11 +112,28 @@ impl State {
                         }
                     };
                 }
-                KeyCode::Esc => self.select_none(),
+                KeyCode::Char('i') => self.current_screen = CurrentScreen::SysInfo,
+                KeyCode::Char('f') => self.current_screen = CurrentScreen::Filter,
                 _ => {}
             },
             CurrentScreen::ProcInfo => match key.code {
                 KeyCode::Char('d') => self.current_screen = CurrentScreen::Main,
+                _ => {}
+            },
+            CurrentScreen::Filter => match key.code {
+                KeyCode::Esc => self.current_screen = CurrentScreen::Main,
+                KeyCode::Char(value) => {
+                    self.filter.push(value);
+                    self.refresh_procs();
+                }
+                KeyCode::Backspace => {
+                    self.filter.pop();
+                    self.refresh_procs();
+                }
+                _ => {}
+            },
+            CurrentScreen::SysInfo => match key.code {
+                KeyCode::Char('i') => self.current_screen = CurrentScreen::Main,
                 _ => {}
             },
         }
@@ -126,8 +155,23 @@ impl State {
         self.refresh_procs();
     }
 
-    pub fn refresh_procs(&mut self) {
+    pub fn refresh(&mut self) {
+        // FIXME: initialize and make sure we only have what we need
+        self.sys.refresh_all();
+        self.refresh_procs();
+        self.ram = read_memory(&mut self.sys);
+        self.cpus = read_cpus(&mut self.sys);
+    }
+
+    fn refresh_procs(&mut self) {
         self.processes = read_procs(&mut self.sys, &mut self.users);
+
+        if self.filter.len() > 0 {
+            self.processes.retain(|p| {
+                let name = p.name.clone().unwrap_or(String::new());
+                name.starts_with(&self.filter)
+            });
+        }
 
         match self.process_sort_strategy {
             ProcessSortStrategy::User => self.processes.sort_by_key(|p| p.user.clone()),

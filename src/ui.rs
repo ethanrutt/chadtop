@@ -5,7 +5,8 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
-        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph, Row, Table,
+        block::Title, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Padding,
+        Paragraph, Row, Table,
     },
     Frame,
 };
@@ -23,88 +24,20 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     let body_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)])
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(2),
+            Constraint::Percentage(90),
+        ])
         .split(chunks[1]);
 
-    render_proc_list(frame, body_chunks[1], state);
+    render_filter(frame, body_chunks[1], state);
+
+    render_proc_list(frame, body_chunks[2], state);
 
     match state.current_screen {
-        CurrentScreen::ProcInfo => {
-            let proc_idx = state
-                .processes
-                .iter()
-                .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
-
-            let proc_idx = match proc_idx {
-                Some(x) => x,
-                None => {
-                    // if we can't find the process then we don't render this
-                    // anymore
-                    state.current_pid_watch = None;
-                    state.current_screen = CurrentScreen::Main;
-                    return;
-                }
-            };
-
-            let proc = &state.processes[proc_idx];
-
-            let mut pid = proc.pid.to_string();
-            pid.insert_str(0, "pid: ");
-
-            let mut start_time = proc.start_time.to_string();
-            start_time.insert_str(0, "start time: ");
-
-            let mut run_time = proc.run_time.to_string();
-            run_time.insert_str(0, "run time: ");
-
-            let disk_usage_read = proc.disk_usage_read / 1000000;
-            let mut disk_usage_read = disk_usage_read.to_string() + " mb";
-            disk_usage_read.insert_str(0, "disk read: ");
-
-            let disk_usage_written = proc.disk_usage_written / 1000000;
-            let mut disk_usage_written = disk_usage_written.to_string() + " mb";
-            disk_usage_written.insert_str(0, "disk written: ");
-
-            let mut open_files = proc.open_files.unwrap_or(0).to_string();
-            open_files.insert_str(0, "open files: ");
-
-            let mut open_files_limit = proc.open_files_limit.unwrap_or(0).to_string();
-            open_files_limit.insert_str(0, "open files limit: ");
-
-            let mut cwd = proc.cwd.clone().unwrap_or(String::from("n/a"));
-            cwd.insert_str(0, "cwd: ");
-
-            let mut exe = proc.exe.clone().unwrap_or(String::from("n/a"));
-            exe.insert_str(0, "exe: ");
-
-            let mut cmd = proc.cmd.clone().unwrap_or(String::from("n/a"));
-            cmd.insert_str(0, "cmd: ");
-
-            let items: Vec<ListItem> = Vec::from([
-                ListItem::from(pid),
-                ListItem::from(start_time),
-                ListItem::from(run_time),
-                ListItem::from(disk_usage_read),
-                ListItem::from(disk_usage_written),
-                ListItem::from(open_files),
-                ListItem::from(open_files_limit),
-                ListItem::from(cwd),
-                ListItem::from(exe),
-                ListItem::from(cmd),
-            ]);
-
-            let popup_block = Block::default()
-                .borders(Borders::NONE)
-                .title(proc.name.clone().unwrap_or(String::from("no proc name")))
-                .style(Style::default().bg(Color::Black));
-
-            let area = signal_menu_rect(70, frame.area());
-
-            let l = List::new(items).block(popup_block);
-
-            frame.render_widget(Clear, area);
-            frame.render_widget(l, area);
-        }
+        CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
+        CurrentScreen::SysInfo => render_sysinfo(frame, state),
         _ => {}
     }
 }
@@ -112,16 +45,15 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 /// renders the title of chadtop
 ///
 /// # Assumptions
-/// We assume that the `chunks` parameter is a horizontal layout split into two parts, the first
-/// part being 33% and the second part being 67% of the screen
+/// We assume that the `chunks` parameter is a horizontal layout split into two parts
 fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     let title_chunks = Layout::default()
         .flex(Flex::Center)
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(80),
+            Constraint::Length(5),
+            Constraint::Max(4),
+            Constraint::Fill(1),
         ])
         .split(chunks[0]);
 
@@ -131,7 +63,6 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 
     let title = Paragraph::new(Text::styled(
         "
-
 ┏┣┓┏┓┏┫╋┏┓┏┓
 ┗┛┗┗┻┗┻┗┗┛┣┛
         ",
@@ -140,24 +71,15 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
     .centered()
     .block(title_block);
 
-    let keybinds_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
+    let welcome_block = Block::default().borders(Borders::NONE);
 
-    let keybinds = Paragraph::new(Text::styled(
-        "(q) quit | (j) navigate down processes | (k) navigate up processes
-(g) go to first process | (G) go to last process
-(s) cycle next sort strategy | (d) more proc info",
-        Style::default(),
-    ))
-    .left_aligned()
-    .block(keybinds_block);
+    let welcome = Paragraph::new(Text::raw("welcome to chadtop\npress (h)elp for keybinds"))
+        .centered()
+        .block(welcome_block);
 
-    let gigachad_block = Block::default()
-        .borders(Borders::NONE)
-        .style(Style::default());
+    let gigachad_block = Block::default().borders(Borders::NONE);
 
-    let gigachad_art = Paragraph::new(Text::styled(
+    let gigachad_art = Paragraph::new(Text::raw(
         "
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⣤⣄⡠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -197,13 +119,12 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 ⠛⠀⠀⠀⠀⠀⠠⠄⢀⡀⢀⣤⢠⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠿⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⠀⠈⠙⠀⠀⠀⠀⠀
 ⠀⠀⠀⣐⣂⣀⣀⠀⣶⣶⣾⢉⣴⢾⣿⣷⣤⣤⣤⣤⣠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡄⢀⣀⠀⠄⠈⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣦⡀⣀⣀⣀⣀⠀⢀
 ",
-        Style::default(),
     ))
     .centered()
     .block(gigachad_block);
 
     frame.render_widget(title, title_chunks[0]);
-    frame.render_widget(keybinds, title_chunks[1]);
+    frame.render_widget(welcome, title_chunks[1]);
     frame.render_widget(gigachad_art, title_chunks[2]);
 }
 
@@ -216,23 +137,17 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 ///
 /// We also assume that the argument `state` is already initialized
 fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
-    // right 67% of the screen chunk, split into the bottom 80% of the screen
-    let selected_row_style = Style::default()
-        .add_modifier(Modifier::REVERSED)
-        .fg(Color::Blue);
-    let selected_col_style = Style::default().fg(Color::DarkGray);
-    let selected_cell_style = Style::default()
-        .add_modifier(Modifier::REVERSED)
-        .fg(Color::DarkGray);
-
     let process_block = Block::new()
-        .title(Line::raw("processes").centered())
-        .title(
-            Line::raw(format!("{}", state.process_sort_strategy))
-                .centered()
-                .style(Style::default().fg(state.process_sort_strategy.get_color())),
-        )
-        .borders(Borders::TOP);
+        .title(Line::styled(
+            "processes",
+            Style::default().fg(Color::LightBlue),
+        ))
+        .title(Line::styled(
+            format!("{}", state.process_sort_strategy),
+            Style::default().fg(state.process_sort_strategy.get_color()),
+        ))
+        .borders(Borders::LEFT | Borders::TOP)
+        .padding(Padding::left(1));
 
     let process_table_header = ["pid", "name", "memory", "cpu usage", "user", "ppid"]
         .into_iter()
@@ -279,14 +194,246 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
         ],
     )
     .header(process_table_header)
-    .row_highlight_style(selected_row_style)
-    .column_highlight_style(selected_col_style)
-    .cell_highlight_style(selected_cell_style)
-    .highlight_symbol(Text::from(vec![" > ".into()]))
+    .row_highlight_style(
+        Style::default()
+            .add_modifier(Modifier::REVERSED)
+            .fg(Color::Blue),
+    )
+    .highlight_symbol(Text::raw(" > "))
     .highlight_spacing(HighlightSpacing::Always)
     .block(process_block);
 
     frame.render_stateful_widget(t, chunk, &mut state.processes_state);
+}
+
+/// renders the additional info about a process
+///
+/// # Assumptions
+/// That the state.CurrentScreen is set to ProcInfo and there is a pid in state.current_pid_watch
+fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
+    let proc_idx = state
+        .processes
+        .iter()
+        .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
+
+    let proc_idx = match proc_idx {
+        Some(x) => x,
+        None => {
+            // if we can't find the process then we don't render this
+            // anymore
+            state.current_pid_watch = None;
+            state.current_screen = CurrentScreen::Main;
+            return;
+        }
+    };
+
+    let proc = &state.processes[proc_idx];
+
+    let mut pid = proc.pid.to_string();
+    pid.insert_str(0, "pid: ");
+
+    let mut start_time = proc.start_time.to_string();
+    start_time.insert_str(0, "start time: ");
+
+    let mut run_time = proc.run_time.to_string();
+    run_time.insert_str(0, "run time: ");
+
+    let disk_usage_read = proc.disk_usage_read / 1000000;
+    let mut disk_usage_read = disk_usage_read.to_string() + " mb";
+    disk_usage_read.insert_str(0, "disk read: ");
+
+    let disk_usage_written = proc.disk_usage_written / 1000000;
+    let mut disk_usage_written = disk_usage_written.to_string() + " mb";
+    disk_usage_written.insert_str(0, "disk written: ");
+
+    let mut open_files = proc.open_files.unwrap_or(0).to_string();
+    open_files.insert_str(0, "open files: ");
+
+    let mut open_files_limit = proc.open_files_limit.unwrap_or(0).to_string();
+    open_files_limit.insert_str(0, "open files limit: ");
+
+    let mut cwd = proc.cwd.clone().unwrap_or(String::from("n/a"));
+    cwd.insert_str(0, "cwd: ");
+
+    let mut exe = proc.exe.clone().unwrap_or(String::from("n/a"));
+    exe.insert_str(0, "exe: ");
+
+    let mut cmd = proc.cmd.clone().unwrap_or(String::from("n/a"));
+    cmd.insert_str(0, "cmd: ");
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(pid),
+        ListItem::from(start_time),
+        ListItem::from(run_time),
+        ListItem::from(disk_usage_read),
+        ListItem::from(disk_usage_written),
+        ListItem::from(open_files),
+        ListItem::from(open_files_limit),
+        ListItem::from(cwd),
+        ListItem::from(exe),
+        ListItem::from(cmd),
+    ]);
+
+    let area = signal_menu_rect(70, frame.area());
+
+    let l = List::new(items).block(black_title_block(Title::from(
+        proc.name.clone().unwrap_or(String::from("no proc name")),
+    )));
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(l, area);
+}
+
+fn render_filter(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    let filter_block = Block::default().borders(Borders::BOTTOM | Borders::LEFT);
+
+    let filter_color = match state.current_screen {
+        CurrentScreen::Filter => Color::LightMagenta,
+        _ => Color::White,
+    };
+
+    let filter_paragraph = Paragraph::new(Text::styled(
+        String::from("f :> ") + &state.filter.clone(),
+        Style::default().fg(filter_color),
+    ))
+    .left_aligned()
+    .block(filter_block);
+
+    frame.render_widget(filter_paragraph, chunk);
+}
+
+fn render_sysinfo(frame: &mut Frame, state: &mut State) {
+    let area = centered_rect(50, 50, frame.area());
+    frame.render_widget(Clear, area);
+
+    let hsplit = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(7), Constraint::Fill(1)])
+        .split(area);
+    let bottom_vsplit = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(hsplit[1]);
+
+    render_sysinfo_info(frame, hsplit[0], state);
+
+    render_sysinfo_cpu(frame, bottom_vsplit[0], state);
+
+    render_sysinfo_mem(frame, bottom_vsplit[1], state);
+}
+
+fn render_sysinfo_info(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let mut os = state
+        .info
+        .long_os_version
+        .clone()
+        .unwrap_or(String::from("unknown"));
+    os.insert_str(0, "os: ");
+
+    let mut kernel = state.info.kernel_long_version.clone();
+    kernel.insert_str(0, "kernel: ");
+
+    let mut hostname = state
+        .info
+        .host_name
+        .clone()
+        .unwrap_or(String::from("unknown"));
+    hostname.insert_str(0, "hostname: ");
+
+    let mut cpu_arch = state.info.cpu_arch.clone();
+    cpu_arch.insert_str(0, "architecture: ");
+
+    let mut physical_core_count = state.info.physical_core_count.unwrap_or(0).to_string();
+    physical_core_count.insert_str(0, "physical cores: ");
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(Text::raw(os).left_aligned()),
+        ListItem::from(Text::raw(kernel).left_aligned()),
+        ListItem::from(Text::raw(hostname).left_aligned()),
+        ListItem::from(Text::raw(cpu_arch).left_aligned()),
+        ListItem::from(Text::raw(physical_core_count).left_aligned()),
+    ]);
+
+    let l = List::new(items).block(black_title_block(Title::from("system info")));
+
+    frame.render_widget(l, chunk);
+}
+
+fn render_sysinfo_cpu(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let items: Vec<ListItem> = state
+        .cpus
+        .iter()
+        .map(|cpu| {
+            ListItem::from(
+                Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).left_aligned(),
+            )
+        })
+        .collect();
+
+    let l = List::new(items).block(black_title_block(Title::from("cpu")));
+    frame.render_widget(l, chunk);
+}
+
+fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let mut total = state.ram.total.to_string();
+    total.insert_str(0, "total: ");
+
+    let mut free = state.ram.free.to_string();
+    free.insert_str(0, "free: ");
+
+    let mut available = state.ram.available.to_string();
+    available.insert_str(0, "available: ");
+
+    let mut used = state.ram.used.to_string();
+    used.insert_str(0, "used: ");
+
+    let mut total_swap = state.ram.total_swap.to_string();
+    total_swap.insert_str(0, "total_swap: ");
+
+    let mut free_swap = state.ram.free_swap.to_string();
+    free_swap.insert_str(0, "free_swap: ");
+
+    let mut used_swap = state.ram.used_swap.to_string();
+    used_swap.insert_str(0, "used_swap: ");
+
+    let mem_list_items: Vec<ListItem> = Vec::from([
+        ListItem::from(Text::raw(total).left_aligned()),
+        ListItem::from(Text::raw(free).left_aligned()),
+        ListItem::from(Text::raw(available).left_aligned()),
+        ListItem::from(Text::raw(used).left_aligned()),
+        ListItem::from(Text::raw(total_swap).left_aligned()),
+        ListItem::from(Text::raw(free_swap).left_aligned()),
+        ListItem::from(Text::raw(used_swap).left_aligned()),
+    ]);
+
+    let l = List::new(mem_list_items).block(black_title_block(Title::from("memory")));
+
+    frame.render_widget(l, chunk);
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1] // Return the middle chunk
 }
 
 /// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
@@ -298,7 +445,7 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
-            Constraint::Length(11),
+            Constraint::Length(12),
             Constraint::Fill(1),
         ])
         .split(r);
@@ -312,4 +459,13 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+/// helper function to create black title block
+fn black_title_block(title: Title) -> Block {
+    Block::default()
+        .borders(Borders::ALL)
+        .title(title)
+        .title_style(Style::default().fg(Color::LightBlue))
+        .style(Style::default().bg(Color::Black))
 }
