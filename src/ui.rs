@@ -5,7 +5,8 @@ use ratatui::{
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Text},
     widgets::{
-        Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph, Row, Table,
+        block::Title, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem, Paragraph,
+        Row, Table,
     },
     Frame,
 };
@@ -32,8 +33,6 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 
     let filter_block = Block::default().borders(Borders::BOTTOM);
 
-    // FIXME: after implementing state.filter, we the below line will be "f :> " +
-    // state.filter_text and also change color and maybe have underline or cursor when active
     let filter_color = match state.current_screen {
         CurrentScreen::Filter => Color::LightRed,
         _ => Color::White,
@@ -98,10 +97,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
                 ListItem::from(Text::raw(physical_core_count).centered()),
             ]);
 
-            // FIXME: if we can overload, convert this to one line with &str type in
-            // black_title_block call
-            let sys_info_title = String::from("system info");
-            let l = List::new(items).block(black_title_block(&sys_info_title));
+            let l = List::new(items).block(black_title_block(Title::from("system info")));
 
             frame.render_widget(l, hsplit[0]);
 
@@ -115,10 +111,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
                 })
                 .collect();
 
-            // FIXME: if we can overload, convert this to one line with &str type in
-            // black_title_block call
-            let cpu_title = String::from("cpu");
-            let l = List::new(items).block(black_title_block(&cpu_title));
+            let l = List::new(items).block(black_title_block(Title::from("cpu")));
             frame.render_widget(l, bottom_vsplit[0]);
 
             let mut total = state.ram.total.to_string();
@@ -152,10 +145,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
                 ListItem::from(Text::raw(used_swap).centered()),
             ]);
 
-            // FIXME: if we can overload, convert this to one line with &str type in
-            // black_title_block call
-            let memory_title = String::from("memory");
-            let l = List::new(mem_list_items).block(black_title_block(&memory_title));
+            let l = List::new(mem_list_items).block(black_title_block(Title::from("memory")));
 
             frame.render_widget(l, bottom_vsplit[1]);
         }
@@ -412,8 +402,9 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
 
     let area = signal_menu_rect(70, frame.area());
 
-    let proc_name = proc.name.clone().unwrap_or(String::from("no proc name"));
-    let l = List::new(items).block(black_title_block(&proc_name));
+    let l = List::new(items).block(black_title_block(Title::from(
+        proc.name.clone().unwrap_or(String::from("no proc name")),
+    )));
 
     frame.render_widget(Clear, area);
     frame.render_widget(l, area);
@@ -469,11 +460,10 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
 /// FIXME: maybe overload so we can also do it with &str like
 /// black_title_block("memory");
 /// helper function to create black title block
-fn black_title_block(title: &String) -> Block {
+fn black_title_block(title: Title) -> Block {
     Block::default()
         .borders(Borders::ALL)
-        .title(title.clone())
+        .title(title)
         .title_style(Style::default().fg(Color::LightBlue))
         .style(Style::default().bg(Color::Black))
 }
-
