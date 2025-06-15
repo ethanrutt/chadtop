@@ -461,8 +461,6 @@ fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1] // Return the middle chunk
 }
 
-/// FIXME: maybe overload so we can also do it with &str like
-/// black_title_block("memory");
 /// helper function to create black title block
 fn black_title_block(title: Title) -> Block {
     Block::default()

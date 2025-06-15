@@ -14,7 +14,6 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - gigachad art
 
 ## TODO
-- add other stuff from sysinfo in popup
 - add helpful keybind messages
 - move keybinds to (h) and appear as a popup instead of always on main screen
 - add kill w shift + k

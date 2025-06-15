@@ -10,8 +10,6 @@ use ratatui::{
     widgets::TableState,
 };
 
-// FIXME: add `Filter` to CurrentScreen option, this will send all key presses to state.filter and
-// will also filter the processes
 pub enum CurrentScreen {
     Main,
     ProcInfo,
