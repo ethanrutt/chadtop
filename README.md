@@ -17,16 +17,21 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - add helpful keybind messages
 - move keybinds to (h) and appear as a popup instead of always on main screen
 - add kill w shift + k
+- optimize using sysinfo package i.e. only refresh what we need. constants can be refreshed once on startup
 - meme and beautify ui with more colors and borders
 - clean up code (ui)
 - write simple tests without `TestBackend` for now
 - tests using test backend
-- benchmark and improve performance where possible
+- handle cmdline options for debug mode and help. look at btop for other useful cmdline options
+- benchmark and improve performance where possible with debug mode
 - make readme chad af
 - add pictures
 - release v0.0.0
+- write man page
 - add package files for aur
 - release v0.0.1
+- add package files for homebrew tap
+- release v0.0.2
 
 ## References
 - [ratatui.rs](https://ratatui.rs/)
