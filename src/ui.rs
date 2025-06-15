@@ -31,124 +31,13 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         ])
         .split(chunks[1]);
 
-    let filter_block = Block::default().borders(Borders::BOTTOM);
-
-    let filter_color = match state.current_screen {
-        CurrentScreen::Filter => Color::LightRed,
-        _ => Color::White,
-    };
-
-    let filter_paragraph = Paragraph::new(Text::styled(
-        String::from("f :> ") + &state.filter.clone(),
-        Style::default().fg(filter_color),
-    ))
-    .left_aligned()
-    .block(filter_block);
-
-    frame.render_widget(filter_paragraph, body_chunks[1]);
+    render_filter(frame, body_chunks[1], state);
 
     render_proc_list(frame, body_chunks[2], state);
 
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
-        CurrentScreen::SysInfo => {
-            // SysInfo
-            // cpu mem
-            let area = centered_rect(50, 50, frame.area());
-            frame.render_widget(Clear, area);
-
-            let hsplit = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Length(7), Constraint::Fill(1)])
-                .split(area);
-            let bottom_vsplit = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-                .split(hsplit[1]);
-
-            let mut os = state
-                .info
-                .long_os_version
-                .clone()
-                .unwrap_or(String::from("unknown"));
-            os.insert_str(0, "os: ");
-
-            let mut kernel = state.info.kernel_long_version.clone();
-            kernel.insert_str(0, "kernel: ");
-
-            let mut hostname = state
-                .info
-                .host_name
-                .clone()
-                .unwrap_or(String::from("unknown"));
-            hostname.insert_str(0, "hostname: ");
-
-            let mut cpu_arch = state.info.cpu_arch.clone();
-            cpu_arch.insert_str(0, "architecture: ");
-
-            let mut physical_core_count = state.info.physical_core_count.unwrap_or(0).to_string();
-            physical_core_count.insert_str(0, "physical cores: ");
-
-            let items: Vec<ListItem> = Vec::from([
-                ListItem::from(Text::raw(os).centered()),
-                ListItem::from(Text::raw(kernel).centered()),
-                ListItem::from(Text::raw(hostname).centered()),
-                ListItem::from(Text::raw(cpu_arch).centered()),
-                ListItem::from(Text::raw(physical_core_count).centered()),
-            ]);
-
-            let l = List::new(items).block(black_title_block(Title::from("system info")));
-
-            frame.render_widget(l, hsplit[0]);
-
-            let items: Vec<ListItem> = state
-                .cpus
-                .iter()
-                .map(|cpu| {
-                    ListItem::from(
-                        Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).centered(),
-                    )
-                })
-                .collect();
-
-            let l = List::new(items).block(black_title_block(Title::from("cpu")));
-            frame.render_widget(l, bottom_vsplit[0]);
-
-            let mut total = state.ram.total.to_string();
-            total.insert_str(0, "total: ");
-
-            let mut free = state.ram.free.to_string();
-            free.insert_str(0, "free: ");
-
-            let mut available = state.ram.available.to_string();
-            available.insert_str(0, "available: ");
-
-            let mut used = state.ram.used.to_string();
-            used.insert_str(0, "used: ");
-
-            let mut total_swap = state.ram.total_swap.to_string();
-            total_swap.insert_str(0, "total_swap: ");
-
-            let mut free_swap = state.ram.free_swap.to_string();
-            free_swap.insert_str(0, "free_swap: ");
-
-            let mut used_swap = state.ram.used_swap.to_string();
-            used_swap.insert_str(0, "used_swap: ");
-
-            let mem_list_items: Vec<ListItem> = Vec::from([
-                ListItem::from(Text::raw(total).centered()),
-                ListItem::from(Text::raw(free).centered()),
-                ListItem::from(Text::raw(available).centered()),
-                ListItem::from(Text::raw(used).centered()),
-                ListItem::from(Text::raw(total_swap).centered()),
-                ListItem::from(Text::raw(free_swap).centered()),
-                ListItem::from(Text::raw(used_swap).centered()),
-            ]);
-
-            let l = List::new(mem_list_items).block(black_title_block(Title::from("memory")));
-
-            frame.render_widget(l, bottom_vsplit[1]);
-        }
+        CurrentScreen::SysInfo => render_sysinfo(frame, state),
         _ => {}
     }
 }
@@ -408,6 +297,134 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
 
     frame.render_widget(Clear, area);
     frame.render_widget(l, area);
+}
+
+fn render_filter(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    let filter_block = Block::default().borders(Borders::BOTTOM);
+
+    let filter_color = match state.current_screen {
+        CurrentScreen::Filter => Color::LightRed,
+        _ => Color::White,
+    };
+
+    let filter_paragraph = Paragraph::new(Text::styled(
+        String::from("f :> ") + &state.filter.clone(),
+        Style::default().fg(filter_color),
+    ))
+    .left_aligned()
+    .block(filter_block);
+
+    frame.render_widget(filter_paragraph, chunk);
+}
+
+fn render_sysinfo(frame: &mut Frame, state: &mut State) {
+    let area = centered_rect(50, 50, frame.area());
+    frame.render_widget(Clear, area);
+
+    let hsplit = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(7), Constraint::Fill(1)])
+        .split(area);
+    let bottom_vsplit = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(hsplit[1]);
+
+    render_sysinfo_info(frame, hsplit[0], state);
+
+    render_sysinfo_cpu(frame, bottom_vsplit[0], state);
+
+    render_sysinfo_mem(frame, bottom_vsplit[1], state);
+}
+
+fn render_sysinfo_info(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let mut os = state
+        .info
+        .long_os_version
+        .clone()
+        .unwrap_or(String::from("unknown"));
+    os.insert_str(0, "os: ");
+
+    let mut kernel = state.info.kernel_long_version.clone();
+    kernel.insert_str(0, "kernel: ");
+
+    let mut hostname = state
+        .info
+        .host_name
+        .clone()
+        .unwrap_or(String::from("unknown"));
+    hostname.insert_str(0, "hostname: ");
+
+    let mut cpu_arch = state.info.cpu_arch.clone();
+    cpu_arch.insert_str(0, "architecture: ");
+
+    let mut physical_core_count = state.info.physical_core_count.unwrap_or(0).to_string();
+    physical_core_count.insert_str(0, "physical cores: ");
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(Text::raw(os).left_aligned()),
+        ListItem::from(Text::raw(kernel).left_aligned()),
+        ListItem::from(Text::raw(hostname).left_aligned()),
+        ListItem::from(Text::raw(cpu_arch).left_aligned()),
+        ListItem::from(Text::raw(physical_core_count).left_aligned()),
+    ]);
+
+    let l = List::new(items).block(black_title_block(Title::from("system info")));
+
+    frame.render_widget(l, chunk);
+}
+
+fn render_sysinfo_cpu(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let items: Vec<ListItem> = state
+        .cpus
+        .iter()
+        .map(|cpu| {
+            ListItem::from(Text::raw(cpu.name.clone() + ": " + &cpu.usage.to_string()).left_aligned())
+        })
+        .collect();
+
+    let l = List::new(items).block(black_title_block(Title::from("cpu")));
+    frame.render_widget(l, chunk);
+}
+
+fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    // FIXME: pad before adding the colon so that everything is at the same level
+    let mut total = state.ram.total.to_string();
+    total.insert_str(0, "total: ");
+
+    let mut free = state.ram.free.to_string();
+    free.insert_str(0, "free: ");
+
+    let mut available = state.ram.available.to_string();
+    available.insert_str(0, "available: ");
+
+    let mut used = state.ram.used.to_string();
+    used.insert_str(0, "used: ");
+
+    let mut total_swap = state.ram.total_swap.to_string();
+    total_swap.insert_str(0, "total_swap: ");
+
+    let mut free_swap = state.ram.free_swap.to_string();
+    free_swap.insert_str(0, "free_swap: ");
+
+    let mut used_swap = state.ram.used_swap.to_string();
+    used_swap.insert_str(0, "used_swap: ");
+
+    let mem_list_items: Vec<ListItem> = Vec::from([
+        ListItem::from(Text::raw(total).left_aligned()),
+        ListItem::from(Text::raw(free).left_aligned()),
+        ListItem::from(Text::raw(available).left_aligned()),
+        ListItem::from(Text::raw(used).left_aligned()),
+        ListItem::from(Text::raw(total_swap).left_aligned()),
+        ListItem::from(Text::raw(free_swap).left_aligned()),
+        ListItem::from(Text::raw(used_swap).left_aligned()),
+    ]);
+
+    let l = List::new(mem_list_items).block(black_title_block(Title::from("memory")));
+
+    frame.render_widget(l, chunk);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
