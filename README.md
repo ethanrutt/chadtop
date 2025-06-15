@@ -18,6 +18,10 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - move keybinds to (h) and appear as a popup instead of always on main screen
 - add kill w shift + k
 - optimize using sysinfo package i.e. only refresh what we need. constants can be refreshed once on startup
+- smaller chadtop art if width/height is too
+small
+- see if we can use ratatui init stuff instead of
+raw
 - meme and beautify ui with more colors and borders
 - clean up code (ui)
 - write simple tests without `TestBackend` for now
