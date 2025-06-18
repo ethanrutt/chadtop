@@ -2,7 +2,10 @@ use std::fmt::{self, Display};
 use sysinfo::{System, Users};
 
 use crate::{
-    cpu::{read_cpus, CpuUsage}, info::{read_info, Info}, proc::{read_procs, Proc}, ram::{read_memory, Ram}
+    cpu::{read_cpus, CpuUsage},
+    info::{read_info, Info},
+    proc::{read_procs, Proc},
+    ram::{read_memory, Ram},
 };
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent},
@@ -15,6 +18,7 @@ pub enum CurrentScreen {
     ProcInfo,
     Filter,
     SysInfo,
+    Help,
 }
 
 pub enum ProcessSortStrategy {
@@ -113,7 +117,12 @@ impl State {
                     };
                 }
                 KeyCode::Char('i') => self.current_screen = CurrentScreen::SysInfo,
+                KeyCode::Char('h') => self.current_screen = CurrentScreen::Help,
                 KeyCode::Char('f') => self.current_screen = CurrentScreen::Filter,
+                KeyCode::Backspace => {
+                    self.filter.clear();
+                    self.refresh_procs();
+                }
                 _ => {}
             },
             CurrentScreen::ProcInfo => match key.code {
@@ -121,7 +130,7 @@ impl State {
                 _ => {}
             },
             CurrentScreen::Filter => match key.code {
-                KeyCode::Esc => self.current_screen = CurrentScreen::Main,
+                KeyCode::Esc | KeyCode::Enter => self.current_screen = CurrentScreen::Main,
                 KeyCode::Char(value) => {
                     self.filter.push(value);
                     self.refresh_procs();
@@ -133,7 +142,11 @@ impl State {
                 _ => {}
             },
             CurrentScreen::SysInfo => match key.code {
-                KeyCode::Char('i') => self.current_screen = CurrentScreen::Main,
+                KeyCode::Esc | KeyCode::Char('i') => self.current_screen = CurrentScreen::Main,
+                _ => {}
+            },
+            CurrentScreen::Help => match key.code {
+                KeyCode::Esc | KeyCode::Char('h') => self.current_screen = CurrentScreen::Main,
                 _ => {}
             },
         }

@@ -38,6 +38,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
         CurrentScreen::SysInfo => render_sysinfo(frame, state),
+        CurrentScreen::Help => render_help(frame, state),
         _ => {}
     }
 }
@@ -274,7 +275,7 @@ fn render_proc_info_popup(frame: &mut Frame, state: &mut State) {
         ListItem::from(cmd),
     ]);
 
-    let area = signal_menu_rect(70, frame.area());
+    let area = proc_info_popup_area(70, frame.area());
 
     let l = List::new(items).block(black_title_block(Title::from(
         proc.name.clone().unwrap_or(String::from("no proc name")),
@@ -399,6 +400,7 @@ fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
     let mut used_swap = state.ram.used_swap.to_string();
     used_swap.insert_str(0, "used_swap: ");
 
+    // FIXME: convert to gb or something
     let mem_list_items: Vec<ListItem> = Vec::from([
         ListItem::from(Text::raw(total).left_aligned()),
         ListItem::from(Text::raw(free).left_aligned()),
@@ -412,6 +414,61 @@ fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
     let l = List::new(mem_list_items).block(black_title_block(Title::from("memory")));
 
     frame.render_widget(l, chunk);
+}
+
+fn render_help(frame: &mut Frame, state: &mut State) {
+    let area = centered_rect(50, 50, frame.area());
+    frame.render_widget(Clear, area);
+
+    let vsplit = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(area);
+    let right_hsplit = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(vsplit[1]);
+
+    let main_mode_keybinds = Paragraph::new(Text::raw(
+        "[q] (q)uit
+[j] down
+[k] up
+[g] first process
+[G] last process
+[s] change (s)ort (s)trategy {i.e. cpu usage, name, memory, etc.}
+[K] (K)ill process
+[i] system (i)nfo
+[d] currently selected process info
+[h] toggle (h)elp
+[f] toggle (f)ilter
+[Backspace] clear filter
+",
+    ))
+    .block(black_title_block(Title::from("main mode keybinds")));
+
+    frame.render_widget(main_mode_keybinds, vsplit[0]);
+
+    let filter_mode_keybinds = Paragraph::new(Text::raw(
+        "[Backspace] delete from filter
+[Esc] return to main mode
+[Enter] return to main mode
+all other keys filter processes
+",
+    ))
+    .block(black_title_block(Title::from("filter mode keybinds")));
+
+    frame.render_widget(filter_mode_keybinds, right_hsplit[0]);
+
+    let popup_keybinds = Paragraph::new(Text::raw(
+        "[i] return to main mode from system (i)nfo
+[d] return to main mode from selected process info
+[h] return to main mode from (h)elp menu
+[Esc] return to main mode from any popup
+",
+    ))
+    .block(black_title_block(Title::from("popup keybinds")));
+
+    frame.render_widget(popup_keybinds, right_hsplit[1]);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
@@ -439,13 +496,13 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 /// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
 /// constant y value since we need our signal_menu and other stuff rendered there to take a
 /// constant amount of space on the y axis
-fn signal_menu_rect(percent_x: u16, r: Rect) -> Rect {
+fn proc_info_popup_area(percent_x: u16, r: Rect) -> Rect {
     // Cut the given rectangle into three vertical pieces
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
-            Constraint::Length(12),
+            Constraint::Length(13),
             Constraint::Fill(1),
         ])
         .split(r);
