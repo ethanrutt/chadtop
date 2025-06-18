@@ -39,6 +39,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
         CurrentScreen::SysInfo => render_sysinfo(frame, state),
         CurrentScreen::Help => render_help(frame, state),
+        CurrentScreen::KillConfirm => render_killconfirm(frame, state),
         _ => {}
     }
 }
@@ -471,6 +472,39 @@ all other keys filter processes
     frame.render_widget(popup_keybinds, right_hsplit[1]);
 }
 
+fn render_killconfirm(frame: &mut Frame, state: &mut State) {
+    let proc_idx = state
+        .processes
+        .iter()
+        .position(|p| p.pid == state.current_pid_watch.expect("no pid watching"));
+
+    let proc_idx = match proc_idx {
+        Some(x) => x,
+        None => {
+            // if we can't find the process then we don't render this
+            // anymore
+            state.current_pid_watch = None;
+            state.current_screen = CurrentScreen::Main;
+            return;
+        }
+    };
+
+    let proc = &state.processes[proc_idx];
+
+    let killconfirm_text = Paragraph::new(Text::raw(format!(
+        "Are you sure you want to kill pid {} {}\npress [y]es / [n]o",
+        proc.pid,
+        proc.name.clone().unwrap_or(String::from("no proc name")),
+    )))
+    .centered()
+    .block(black_title_block(Title::from("kill confirm")));
+
+    let area = kill_confirm_popup_area(60, frame.area());
+
+    frame.render_widget(Clear, area);
+    frame.render_widget(killconfirm_text, area);
+}
+
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     // Cut the given rectangle into three vertical pieces
     let popup_layout = Layout::default()
@@ -514,6 +548,31 @@ fn proc_info_popup_area(percent_x: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
             Constraint::Percentage(percent_x),
             Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+/// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
+/// constant y value since we need our kill confirm menu there to take a
+/// constant amount of space on the y axis
+fn kill_confirm_popup_area(percent_x: u16, r: Rect) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(4),
+            Constraint::Fill(1),
+        ])
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(100),
+            Constraint::Fill(1),
         ])
         .split(popup_layout[1])[1] // Return the middle chunk
 }

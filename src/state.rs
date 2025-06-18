@@ -1,5 +1,5 @@
 use std::fmt::{self, Display};
-use sysinfo::{System, Users};
+use sysinfo::{Pid, System, Users};
 
 use crate::{
     cpu::{read_cpus, CpuUsage},
@@ -19,6 +19,7 @@ pub enum CurrentScreen {
     Filter,
     SysInfo,
     Help,
+    KillConfirm,
 }
 
 pub enum ProcessSortStrategy {
@@ -116,6 +117,18 @@ impl State {
                         }
                     };
                 }
+                KeyCode::Char('K') => {
+                    match self.processes_state.selected() {
+                        Some(idx) => {
+                            self.current_pid_watch = Some(self.processes[idx].pid);
+                            self.current_screen = CurrentScreen::KillConfirm;
+                        }
+                        None => {
+                            self.current_pid_watch = None;
+                            self.current_screen = CurrentScreen::Main;
+                        }
+                    };
+                }
                 KeyCode::Char('i') => self.current_screen = CurrentScreen::SysInfo,
                 KeyCode::Char('h') => self.current_screen = CurrentScreen::Help,
                 KeyCode::Char('f') => self.current_screen = CurrentScreen::Filter,
@@ -147,6 +160,26 @@ impl State {
             },
             CurrentScreen::Help => match key.code {
                 KeyCode::Esc | KeyCode::Char('h') => self.current_screen = CurrentScreen::Main,
+                _ => {}
+            },
+            CurrentScreen::KillConfirm => match key.code {
+                KeyCode::Esc | KeyCode::Char('n') | KeyCode::Char('N') => {
+                    self.current_screen = CurrentScreen::Main
+                }
+                KeyCode::Char('y') | KeyCode::Char('Y') => match self.current_pid_watch {
+                    Some(pid) => {
+                        self.sys
+                            .process(Pid::from_u32(pid))
+                            .and_then(|p| Some(p.kill()));
+
+                        self.refresh_procs();
+                        self.current_pid_watch = None;
+                        self.current_screen = CurrentScreen::Main;
+                    }
+                    None => {
+                        self.current_screen = CurrentScreen::Main;
+                    }
+                },
                 _ => {}
             },
         }

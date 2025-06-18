@@ -14,10 +14,10 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - gigachad art
 
 ## TODO
-- add kill w shift + k
 - optimize using sysinfo package i.e. only refresh what we need. constants can be refreshed once on startup
 - smaller chadtop art if width/height is too
 small
+- optimize for smaller window size as well
 - see if we can use ratatui init stuff instead of
 raw
 - meme and beautify ui with more colors and borders
