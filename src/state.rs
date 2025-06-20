@@ -1,5 +1,8 @@
 use std::fmt::{self, Display};
-use sysinfo::{Pid, System, Users};
+use sysinfo::{
+    CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
+    Users,
+};
 
 use crate::{
     cpu::{read_cpus, CpuUsage},
@@ -79,7 +82,7 @@ impl State {
     pub fn new() -> State {
         let mut new = State {
             exit: false,
-            sys: System::new_all(),
+            sys: System::new_with_specifics(get_refresh_kind()),
             users: Users::new_with_refreshed_list(),
             processes: Vec::new(),
             cpus: Vec::new(),
@@ -202,8 +205,7 @@ impl State {
     }
 
     pub fn refresh(&mut self) {
-        // FIXME: initialize and make sure we only have what we need
-        self.sys.refresh_all();
+        self.sys.refresh_specifics(get_refresh_kind());
         self.refresh_procs();
         self.ram = read_memory(&mut self.sys);
         self.cpus = read_cpus(&mut self.sys);
@@ -268,4 +270,21 @@ impl State {
     fn last(&mut self) {
         self.processes_state.select(Some(self.processes.len() - 1));
     }
+}
+
+fn get_refresh_kind() -> RefreshKind {
+    RefreshKind::nothing()
+        .with_memory(MemoryRefreshKind::everything())
+        .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
+        .with_processes(
+            ProcessRefreshKind::nothing()
+                .with_cmd(UpdateKind::Always)
+                .with_exe(UpdateKind::Always)
+                .with_cwd(UpdateKind::Always)
+                .with_memory()
+                .with_cpu()
+                .with_disk_usage()
+                .with_user(UpdateKind::Always)
+                .without_tasks(),
+        )
 }
