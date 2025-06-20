@@ -62,7 +62,6 @@ impl ProcessSortStrategy {
     }
 }
 
-// FIXME: add filter member that handles the filter text
 pub struct State {
     pub exit: bool,
     pub sys: System,
@@ -225,7 +224,11 @@ impl State {
             ProcessSortStrategy::User => self.processes.sort_by_key(|p| p.user.clone()),
             ProcessSortStrategy::Pid => self.processes.sort_by_key(|p| p.pid),
             ProcessSortStrategy::Ppid => self.processes.sort_by_key(|p| p.ppid),
-            ProcessSortStrategy::CpuUsage => self.processes.sort_by_key(|p| p.cpu_usage),
+            ProcessSortStrategy::CpuUsage => self.processes.sort_by(|a, b| {
+                a.cpu_usage
+                    .partial_cmp(&b.cpu_usage)
+                    .unwrap_or(std::cmp::Ordering::Greater)
+            }),
             ProcessSortStrategy::Memory => self.processes.sort_by_key(|p| p.memory),
             ProcessSortStrategy::Alphabetical => self.processes.sort_by_key(|p| p.name.clone()),
         }

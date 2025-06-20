@@ -10,7 +10,7 @@ pub struct Proc {
     pub ppid: Option<u32>,
     pub start_time: u64,
     pub run_time: u64,
-    pub cpu_usage: i32,
+    pub cpu_usage: f32,
     pub disk_usage_read: u64,
     pub disk_usage_written: u64,
     pub user: Option<String>,
@@ -50,7 +50,7 @@ pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
         let ppid: Option<u32> = proc.parent().and_then(|n| Some(n.as_u32()));
         let start_time: u64 = proc.start_time();
         let run_time: u64 = proc.run_time();
-        let cpu_usage: i32 = proc.cpu_usage() as i32;
+        let cpu_usage: f32 = proc.cpu_usage();
         let disk_usage: DiskUsage = proc.disk_usage();
         let disk_usage_read: u64 = disk_usage.total_read_bytes;
         let disk_usage_written: u64 = disk_usage.total_written_bytes;
