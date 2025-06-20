@@ -15,11 +15,8 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 
 ## TODO
 - optimize using sysinfo package i.e. only refresh what we need. constants can be refreshed once on startup
-- smaller chadtop art if width/height is too
-small
-- optimize for smaller window size as well
-- see if we can use ratatui init stuff instead of
-raw
+- responsive chadtop art and main layout
+- responsive popups
 - meme and beautify ui with more colors and borders
 - clean up code (ui)
 - write simple tests without `TestBackend` for now

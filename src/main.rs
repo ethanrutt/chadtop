@@ -1,7 +1,7 @@
 pub mod cpu;
+pub mod info;
 pub mod proc;
 pub mod ram;
-pub mod info;
 pub mod state;
 pub mod ui;
 
@@ -9,35 +9,20 @@ use std::io::{self, Result};
 use std::time::{Duration, Instant};
 
 use ratatui::{
-    crossterm::{
-        event::{self, DisableMouseCapture, EnableMouseCapture, Event},
-        execute,
-        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    },
-    prelude::{Backend, CrosstermBackend},
+    crossterm::event::{self, Event},
+    prelude::Backend,
     Terminal,
 };
 use state::State;
 use ui::ui;
 
 fn main() -> Result<()> {
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = ratatui::init();
 
     let mut state = State::new();
     let _ = run(&mut terminal, &mut state);
 
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
+    ratatui::restore();
 
     Ok(())
 }
