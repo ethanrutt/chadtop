@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
@@ -17,10 +15,10 @@ use crate::state::{CurrentScreen, State};
 pub fn ui(frame: &mut Frame, state: &mut State) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+        .constraints([Constraint::Percentage(33), Constraint::Percentage(67)])
         .split(frame.area());
 
-    render_title(frame, &chunks);
+    render_title(frame, chunks[0]);
 
     let body_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -38,7 +36,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
     match state.current_screen {
         CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
         CurrentScreen::SysInfo => render_sysinfo(frame, state),
-        CurrentScreen::Help => render_help(frame, state),
+        CurrentScreen::Help => render_help(frame),
         CurrentScreen::KillConfirm => render_killconfirm(frame, state),
         _ => {}
     }
@@ -48,7 +46,7 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
 ///
 /// # Assumptions
 /// We assume that the `chunks` parameter is a horizontal layout split into two parts
-fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
+fn render_title(frame: &mut Frame, chunk: Rect) {
     let title_chunks = Layout::default()
         .flex(Flex::Center)
         .direction(Direction::Vertical)
@@ -57,7 +55,7 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
             Constraint::Max(4),
             Constraint::Fill(1),
         ])
-        .split(chunks[0]);
+        .split(chunk);
 
     let title_block = Block::default()
         .borders(Borders::NONE)
@@ -81,8 +79,33 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 
     let gigachad_block = Block::default().borders(Borders::NONE);
 
-    let gigachad_art = Paragraph::new(Text::raw(
-        "
+    let gigachad_art: Paragraph;
+    if small_mode(&chunk) {
+        gigachad_art = Paragraph::new(Text::raw(
+            "
+⠀⠀⠀⠀⠀⢀⣠⢴⣮⣽⣿⣿⣿⣿⣿⣯⣭⣭⣿⣢⢄⡀⠀⠀⠀⠀
+⠀⠀⠀⠀⣴⣿⣾⣿⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⢆⠀⠀⠀
+⠀⠀⢀⣾⣿⣿⣿⣿⣿⣿⡿⠛⠋⠙⣉⠛⣛⣿⣿⣿⠟⠛⢧⢷⠀⠀
+⠀⠀⡼⣿⣿⣿⣿⣿⣿⠯⠄⠀⠀⠀⠀⣦⣤⣽⣿⣟⣗⣄⠈⢣⡗⠀
+⠀⢠⢿⣿⣿⣿⣿⣿⣿⡴⠚⠉⠀⢀⣤⣬⣬⣿⣿⣿⠹⣿⡇⠀⣿⠀
+⠀⢸⢸⣿⣿⣿⣿⣿⠋⠀⠀⢠⠴⠟⣛⣿⣿⣿⣿⣿⣶⣾⣰⡀⢹⡢
+⠀⣸⢾⠟⠻⣿⣿⠇⠀⠀⠀⠐⢿⣿⣿⣿⣿⣿⣿⡟⢻⢻⣿⣿⣶⡇
+⢀⣾⣏⣐⡄⠀⣯⡀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⠄⠘⣿⣿⣿⣷⡅
+⢸⣤⣿⣿⠀⠀⣿⣷⡀⠀⠀⠀⣠⣶⣿⣿⣿⣿⠇⣄⣀⠸⡾⣷⡄⡇
+⠈⠣⣃⡈⢉⣸⣿⡻⣿⣮⣴⣾⡏⢀⣽⣿⣿⣿⣶⣶⣶⣴⣇⣿⠀⣱
+⠀⠀⡏⡏⠁⣿⢿⣆⣿⣿⣿⣿⣧⣿⣿⣿⣛⣿⣿⣿⣿⡦⣾⡟⢠⣃
+⠀⠀⣧⡇⢠⡏⢂⢹⣿⣿⣿⣿⣿⣿⣿⣿⡷⣬⣭⣙⡛⢳⣼⣿⣿⣎
+⠀⢠⢿⠀⠘⣿⣧⣵⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⣿⣿⣥⣿⣿⢿⡿
+⠀⢸⡟⠀⠀⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣸⣿⢻⡿⠀
+⠀⣯⡇⠀⠀⠀⠀⠈⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⢸⠁⠀
+⣴⠟⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⣜⡆⠀
+",
+        ))
+        .centered()
+        .block(gigachad_block);
+    } else {
+        gigachad_art = Paragraph::new(Text::raw(
+            "
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⣤⣄⡠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -121,9 +144,10 @@ fn render_title(frame: &mut Frame, chunks: &Rc<[Rect]>) {
 ⠛⠀⠀⠀⠀⠀⠠⠄⢀⡀⢀⣤⢠⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠿⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⠀⠈⠙⠀⠀⠀⠀⠀
 ⠀⠀⠀⣐⣂⣀⣀⠀⣶⣶⣾⢉⣴⢾⣿⣷⣤⣤⣤⣤⣠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡄⢀⣀⠀⠄⠈⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣦⡀⣀⣀⣀⣀⠀⢀
 ",
-    ))
-    .centered()
-    .block(gigachad_block);
+        ))
+        .centered()
+        .block(gigachad_block);
+    }
 
     frame.render_widget(title, title_chunks[0]);
     frame.render_widget(welcome, title_chunks[1]);
@@ -334,7 +358,13 @@ fn render_filter(frame: &mut Frame, chunk: Rect, state: &mut State) {
 }
 
 fn render_sysinfo(frame: &mut Frame, state: &mut State) {
-    let area = centered_rect(50, 50, frame.area());
+    let area: Rect;
+    if small_mode(&frame.area()) {
+        area = centered_rect(90, 90, frame.area());
+    } else {
+        area = centered_rect(50, 50, frame.area());
+    }
+
     frame.render_widget(Clear, area);
 
     let hsplit = Layout::default()
@@ -482,8 +512,14 @@ fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
     frame.render_widget(l, chunk);
 }
 
-fn render_help(frame: &mut Frame, state: &mut State) {
-    let area = centered_rect(50, 50, frame.area());
+fn render_help(frame: &mut Frame) {
+    let area: Rect;
+    if small_mode(&frame.area()) {
+        area = centered_rect(90, 90, frame.area());
+    } else {
+        area = centered_rect(50, 50, frame.area());
+    }
+
     frame.render_widget(Clear, area);
 
     let vsplit = Layout::default()
@@ -564,7 +600,7 @@ fn render_killconfirm(frame: &mut Frame, state: &mut State) {
     .centered()
     .block(black_title_block(Title::from("kill confirm")));
 
-    let area = kill_confirm_popup_area(60, frame.area());
+    let area = kill_confirm_popup_area(frame.area());
 
     frame.render_widget(Clear, area);
     frame.render_widget(killconfirm_text, area);
@@ -620,7 +656,7 @@ fn proc_info_popup_area(percent_x: u16, r: Rect) -> Rect {
 /// helper function, similar to `centered_rect` from ratatui json editor tutorial, but has a
 /// constant y value since we need our kill confirm menu there to take a
 /// constant amount of space on the y axis
-fn kill_confirm_popup_area(percent_x: u16, r: Rect) -> Rect {
+fn kill_confirm_popup_area(r: Rect) -> Rect {
     // Cut the given rectangle into three vertical pieces
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -701,4 +737,21 @@ fn right_pad(s: &mut String, total_len: usize) {
     }
 
     s.insert_str(s.len(), &" ".to_string().repeat(total_len - s.len()));
+}
+
+/// returns a boolean whether to render in large mode or small mode
+/// specifically, whether the screen / area is big enough to render normally, or if we need to
+/// condense the ui and render stuff to take up more space, i.e. if the terminal is full screen or
+/// if it is smaller and takes up only a corner of the screen or something
+///
+/// # Examples
+/// ```rust
+/// if small_mode(frame.area()) {
+///     render_small_widget(frame, state);
+/// } else {
+///     render_normal_widget(frame, state);
+/// }
+/// ```
+fn small_mode(chunk: &Rect) -> bool {
+    chunk.width < 65 || chunk.height < 40
 }

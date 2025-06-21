@@ -14,8 +14,6 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - gigachad art
 
 ## TODO
-- responsive chadtop art and main layout
-- responsive popups
 - meme and beautify ui with more colors and borders
 - clean up code (ui)
 - write simple tests without `TestBackend` for now
@@ -34,3 +32,4 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 ## References
 - [ratatui.rs](https://ratatui.rs/)
 - [ascii art generator (specifically tmplr)](https://patorjk.com/software/taag/)
+- [gigachad art](https://emojicombos.com/gigachad-ascii-art)
