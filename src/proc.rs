@@ -85,3 +85,38 @@ pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
 
     ret
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sysinfo::{System, Users};
+
+    #[test]
+    fn test_read_procs_returns_some_procs() {
+        let mut sys = System::new_all();
+        let mut users = Users::new_with_refreshed_list();
+
+        sys.refresh_all();
+
+        let procs = read_procs(&mut sys, &mut users);
+
+        assert!(!procs.is_empty());
+    }
+
+    #[test]
+    fn test_procs_have_usernames_when_possible() {
+        let mut sys = System::new_all();
+        let mut users = Users::new_with_refreshed_list();
+
+        sys.refresh_all();
+
+        let procs = read_procs(&mut sys, &mut users);
+
+        let some_have_usernames = procs.iter().any(|p| p.user.is_some());
+
+        assert!(
+            some_have_usernames,
+            "Expected at least one proc with user info"
+        );
+    }
+}

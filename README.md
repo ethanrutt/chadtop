@@ -14,10 +14,6 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - gigachad art
 
 ## TODO
-- meme and beautify ui with more colors and borders
-- clean up code (ui)
-- write simple tests without `TestBackend` for now
-- tests using test backend
 - handle cmdline options for debug mode and help. look at btop for other useful cmdline options
 - benchmark and improve performance where possible with debug mode
 - make readme chad af

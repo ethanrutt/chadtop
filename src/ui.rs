@@ -73,7 +73,7 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
 
     let welcome_block = Block::default().borders(Borders::NONE);
 
-    let welcome = Paragraph::new(Text::raw("welcome to chadtop\npress (h)elp for keybinds"))
+    let welcome = Paragraph::new(Text::raw("welcome to chadtop\npress [h]elp for keybinds"))
         .centered()
         .block(welcome_block);
 

@@ -25,3 +25,39 @@ pub fn read_info() -> Info {
         physical_core_count,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_info_sanity() {
+        let info = read_info();
+
+        assert!(
+            !info.kernel_long_version.is_empty(),
+            "kernel_long_version should not be empty"
+        );
+
+        assert!(!info.cpu_arch.is_empty(), "cpu_arch should not be empty");
+
+        // Optional fields should be Some(...) and non-empty when present
+        if let Some(ref os) = info.long_os_version {
+            assert!(
+                !os.is_empty(),
+                "long_os_version should not be an empty string"
+            );
+        }
+
+        if let Some(ref host) = info.host_name {
+            assert!(!host.is_empty(), "host_name should not be an empty string");
+        }
+
+        if let Some(cores) = info.physical_core_count {
+            assert!(
+                cores > 0,
+                "physical_core_count should be greater than zero if present"
+            );
+        }
+    }
+}

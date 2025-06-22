@@ -1,4 +1,7 @@
-use std::fmt::{self, Display};
+use std::{
+    cmp::Reverse,
+    fmt::{self, Display},
+};
 use sysinfo::{
     CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
     Users,
@@ -16,6 +19,7 @@ use ratatui::{
     widgets::TableState,
 };
 
+#[derive(Clone, Debug)]
 pub enum CurrentScreen {
     Main,
     ProcInfo,
@@ -224,12 +228,19 @@ impl State {
             ProcessSortStrategy::User => self.processes.sort_by_key(|p| p.user.clone()),
             ProcessSortStrategy::Pid => self.processes.sort_by_key(|p| p.pid),
             ProcessSortStrategy::Ppid => self.processes.sort_by_key(|p| p.ppid),
-            ProcessSortStrategy::CpuUsage => self.processes.sort_by(|a, b| {
-                a.cpu_usage
-                    .partial_cmp(&b.cpu_usage)
-                    .unwrap_or(std::cmp::Ordering::Greater)
-            }),
-            ProcessSortStrategy::Memory => self.processes.sort_by_key(|p| p.memory),
+            ProcessSortStrategy::CpuUsage => {
+                self.processes.sort_by(|a, b| {
+                    // compare b to a because we want reverse sorting i.e. most cpu usage goes
+                    // first or descending order
+                    b.cpu_usage
+                        .partial_cmp(&a.cpu_usage)
+                        .unwrap_or(std::cmp::Ordering::Greater)
+                });
+            }
+            ProcessSortStrategy::Memory => {
+                // also want descending order, most memory usage goes first
+                self.processes.sort_by_key(|p| Reverse(p.memory));
+            }
             ProcessSortStrategy::Alphabetical => self.processes.sort_by_key(|p| p.name.clone()),
         }
     }
@@ -290,4 +301,80 @@ fn get_refresh_kind() -> RefreshKind {
                 .with_user(UpdateKind::Always)
                 .without_tasks(),
         )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::crossterm::event::KeyCode;
+    use ratatui::crossterm::event::KeyEvent;
+
+    #[test]
+    fn test_state_initializes_correctly() {
+        let state = State::new();
+
+        assert!(
+            !state.processes.is_empty(),
+            "Expected some processes to be loaded"
+        );
+        assert!(!state.cpus.is_empty(), "Expected CPU info to be loaded");
+        assert!(state.ram.total > 0, "Expected non-zero total RAM");
+        assert!(
+            !state.info.kernel_long_version.is_empty(),
+            "Expected OS info to be loaded"
+        );
+    }
+
+    #[test]
+    fn test_sort_strategy_cycles_through_all_variants() {
+        let mut state = State::new();
+        let original = &state.process_sort_strategy;
+
+        let mut seen = std::collections::HashSet::new();
+        seen.insert(format!("{}", original));
+
+        for _ in 0..10 {
+            state.next_sort_strategy();
+            seen.insert(format!("{}", state.process_sort_strategy));
+        }
+
+        assert_eq!(seen.len(), 6);
+    }
+
+    #[test]
+    fn test_quit_key_sets_exit_true() {
+        let mut state = State::new();
+        assert!(!state.exit);
+        state.handle_key(&KeyEvent::from(KeyCode::Char('q')));
+        assert!(state.exit, "Expected 'q' to set exit flag");
+    }
+
+    #[test]
+    fn test_handle_key_s_changes_sort_strategy() {
+        let mut state = State::new();
+        let before = format!("{}", state.process_sort_strategy);
+        state.handle_key(&KeyEvent::from(KeyCode::Char('s')));
+        let after = format!("{}", state.process_sort_strategy);
+        assert_ne!(before, after, "Sort strategy should change on 's' key");
+    }
+
+    #[test]
+    fn test_sysinfo_screen() {
+        let mut state = State::new();
+        let before = state.current_screen.clone();
+        assert!(matches!(before, CurrentScreen::Main));
+        state.handle_key(&KeyEvent::from(KeyCode::Char('i')));
+        let after = state.current_screen.clone();
+        assert!(matches!(after, CurrentScreen::SysInfo));
+    }
+
+    #[test]
+    fn test_help_screen() {
+        let mut state = State::new();
+        let before = state.current_screen.clone();
+        assert!(matches!(before, CurrentScreen::Main));
+        state.handle_key(&KeyEvent::from(KeyCode::Char('h')));
+        let after = state.current_screen.clone();
+        assert!(matches!(after, CurrentScreen::Help));
+    }
 }
