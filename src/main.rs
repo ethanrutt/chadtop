@@ -5,6 +5,7 @@ pub mod ram;
 pub mod state;
 pub mod ui;
 
+use std::env;
 use std::io::{self, Result};
 use std::time::{Duration, Instant};
 
@@ -17,9 +18,17 @@ use state::State;
 use ui::ui;
 
 fn main() -> Result<()> {
+    let debug_mode: bool;
+    let args: Vec<String> = env::args().collect();
+    if args.contains(&String::from("-d")) {
+        debug_mode = true;
+    } else {
+        debug_mode = false;
+    }
+
     let mut terminal = ratatui::init();
 
-    let mut state = State::new();
+    let mut state = State::new(debug_mode);
     let _ = run(&mut terminal, &mut state);
 
     ratatui::restore();

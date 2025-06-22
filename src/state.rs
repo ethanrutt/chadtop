@@ -79,10 +79,11 @@ pub struct State {
     pub current_screen: CurrentScreen,
     pub current_pid_watch: Option<u32>,
     pub filter: String,
+    pub debug: bool,
 }
 
 impl State {
-    pub fn new() -> State {
+    pub fn new(debug: bool) -> State {
         let mut new = State {
             exit: false,
             sys: System::new_with_specifics(get_refresh_kind()),
@@ -96,6 +97,7 @@ impl State {
             current_screen: CurrentScreen::Main,
             current_pid_watch: None,
             filter: String::new(),
+            debug: debug,
         };
         new.refresh();
         new
@@ -311,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_state_initializes_correctly() {
-        let state = State::new();
+        let state = State::new(false);
 
         assert!(
             !state.processes.is_empty(),
@@ -327,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_sort_strategy_cycles_through_all_variants() {
-        let mut state = State::new();
+        let mut state = State::new(false);
         let original = &state.process_sort_strategy;
 
         let mut seen = std::collections::HashSet::new();
@@ -343,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_quit_key_sets_exit_true() {
-        let mut state = State::new();
+        let mut state = State::new(false);
         assert!(!state.exit);
         state.handle_key(&KeyEvent::from(KeyCode::Char('q')));
         assert!(state.exit, "Expected 'q' to set exit flag");
@@ -351,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_handle_key_s_changes_sort_strategy() {
-        let mut state = State::new();
+        let mut state = State::new(false);
         let before = format!("{}", state.process_sort_strategy);
         state.handle_key(&KeyEvent::from(KeyCode::Char('s')));
         let after = format!("{}", state.process_sort_strategy);
@@ -360,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_sysinfo_screen() {
-        let mut state = State::new();
+        let mut state = State::new(false);
         let before = state.current_screen.clone();
         assert!(matches!(before, CurrentScreen::Main));
         state.handle_key(&KeyEvent::from(KeyCode::Char('i')));
@@ -370,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_help_screen() {
-        let mut state = State::new();
+        let mut state = State::new(false);
         let before = state.current_screen.clone();
         assert!(matches!(before, CurrentScreen::Main));
         state.handle_key(&KeyEvent::from(KeyCode::Char('h')));
