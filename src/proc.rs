@@ -22,10 +22,11 @@ pub struct Proc {
 /// before calling this make sure to refresh the System argument and make sure the Users argument
 /// is populated
 pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
-    let mut ret: Vec<Proc> = Vec::new();
+    let processes = sys.processes();
+    let mut ret: Vec<Proc> = Vec::with_capacity(processes.len());
 
-    for (pid, proc) in sys.processes() {
-        let name: Option<String> = proc.name().to_str().and_then(|s| Some(String::from(s)));
+    for (pid, proc) in processes {
+        let name: Option<String> = proc.name().to_str().map(str::to_string);
 
         let cmd: Option<String> = proc
             .cmd()
@@ -34,52 +35,33 @@ pub fn read_procs(sys: &mut System, users: &mut Users) -> Vec<Proc> {
             .collect::<Option<Vec<&str>>>()
             .map(|v| v.join(" "));
 
-        let exe: Option<String> = proc
-            .exe()
-            .and_then(|s| s.to_str())
-            .and_then(|s| Some(String::from(s)));
+        let exe: Option<String> = proc.exe().and_then(|s| s.to_str()).map(str::to_string);
 
-        let pid: u32 = pid.as_u32();
+        let cwd: Option<String> = proc.cwd().and_then(|s| s.to_str()).map(str::to_string);
 
-        let cwd: Option<String> = proc
-            .cwd()
-            .and_then(|s| s.to_str())
-            .and_then(|s| Some(String::from(s)));
-
-        let memory: u64 = proc.memory();
-        let ppid: Option<u32> = proc.parent().and_then(|n| Some(n.as_u32()));
-        let start_time: u64 = proc.start_time();
-        let run_time: u64 = proc.run_time();
-        let cpu_usage: f32 = proc.cpu_usage();
         let disk_usage: DiskUsage = proc.disk_usage();
-        let disk_usage_read: u64 = disk_usage.total_read_bytes;
-        let disk_usage_written: u64 = disk_usage.total_written_bytes;
 
-        users.refresh();
         let user = proc
             .user_id()
             .and_then(|u| users.get_user_by_id(u))
-            .and_then(|u| Some(String::from(u.name())));
-
-        let open_files: Option<usize> = proc.open_files();
-        let open_files_limit: Option<usize> = proc.open_files_limit();
+            .map(|u| u.name().to_string());
 
         ret.push(Proc {
             name,
             cmd,
             exe,
-            pid,
+            pid: pid.as_u32(),
             cwd,
-            memory,
-            ppid,
-            start_time,
-            run_time,
-            cpu_usage,
-            disk_usage_read,
-            disk_usage_written,
+            memory: proc.memory(),
+            ppid: proc.parent().map(|p| p.as_u32()),
+            start_time: proc.start_time(),
+            run_time: proc.run_time(),
+            cpu_usage: proc.cpu_usage(),
+            disk_usage_read: disk_usage.total_read_bytes,
+            disk_usage_written: disk_usage.total_written_bytes,
             user,
-            open_files,
-            open_files_limit,
+            open_files: proc.open_files(),
+            open_files_limit: proc.open_files_limit(),
         })
     }
 
