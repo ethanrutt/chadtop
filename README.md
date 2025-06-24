@@ -62,5 +62,6 @@ am still a noob rustacean.
 
 ## References
 - [ratatui.rs](https://ratatui.rs/)
+- [rust sysinfo](https://docs.rs/sysinfo/latest/sysinfo/)
 - [ascii art generator (specifically tmplr)](https://patorjk.com/software/taag/)
 - [gigachad art](https://emojicombos.com/gigachad-ascii-art)
