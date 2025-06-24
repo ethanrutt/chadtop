@@ -116,9 +116,7 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
         ])
         .split(chunk);
 
-    let title_block = Block::default()
-        .borders(Borders::NONE)
-        .style(Style::default());
+    let no_border_block = Block::default().borders(Borders::NONE);
 
     let title = Paragraph::new(Text::styled(
         "
@@ -128,20 +126,14 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
         Style::default().fg(Color::LightBlue),
     ))
     .centered()
-    .block(title_block);
-
-    let welcome_block = Block::default().borders(Borders::NONE);
+    .block(no_border_block.clone());
 
     let welcome = Paragraph::new(Text::raw("welcome to chadtop\npress [h]elp for keybinds"))
         .centered()
-        .block(welcome_block);
+        .block(no_border_block.clone());
 
-    let gigachad_block = Block::default().borders(Borders::NONE);
-
-    let gigachad_art: Paragraph;
-    if small_mode(&chunk) {
-        gigachad_art = Paragraph::new(Text::raw(
-            "
+    let gigachad_art = Paragraph::new(Text::raw(if small_mode(&chunk) {
+        "
 ⠀⠀⠀⠀⠀⢀⣠⢴⣮⣽⣿⣿⣿⣿⣿⣯⣭⣭⣿⣢⢄⡀⠀⠀⠀⠀
 ⠀⠀⠀⠀⣴⣿⣾⣿⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⢆⠀⠀⠀
 ⠀⠀⢀⣾⣿⣿⣿⣿⣿⣿⡿⠛⠋⠙⣉⠛⣛⣿⣿⣿⠟⠛⢧⢷⠀⠀
@@ -158,13 +150,9 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
 ⠀⢸⡟⠀⠀⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣸⣿⢻⡿⠀
 ⠀⣯⡇⠀⠀⠀⠀⠈⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⢸⠁⠀
 ⣴⠟⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⣜⡆⠀
-",
-        ))
-        .centered()
-        .block(gigachad_block);
+"
     } else {
-        gigachad_art = Paragraph::new(Text::raw(
-            "
+        "
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⣤⣄⡠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -202,11 +190,10 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
 ⠤⠄⠀⠀⠀⣀⡀⢀⡀⠤⠀⠉⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣿⣦⠈⠛⢷⣄⠀⠀⠀⠀⠀
 ⠛⠀⠀⠀⠀⠀⠠⠄⢀⡀⢀⣤⢠⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⠿⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⠀⠈⠙⠀⠀⠀⠀⠀
 ⠀⠀⠀⣐⣂⣀⣀⠀⣶⣶⣾⢉⣴⢾⣿⣷⣤⣤⣤⣤⣠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡄⢀⣀⠀⠄⠈⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣦⡀⣀⣀⣀⣀⠀⢀
-",
-        ))
-        .centered()
-        .block(gigachad_block);
-    }
+"
+    }))
+    .centered()
+    .block(no_border_block.clone());
 
     frame.render_widget(title, title_chunks[0]);
     frame.render_widget(welcome, title_chunks[1]);
