@@ -53,7 +53,11 @@ fn run<B: Backend>(terminal: &mut Terminal<B>, state: &mut State) -> io::Result<
         }
 
         if elapsed.elapsed() >= refresh_interval {
-            state.refresh();
+            if state.debug {
+                state.debug_refresh();
+            } else {
+                state.refresh();
+            }
             elapsed = Instant::now();
         }
     }

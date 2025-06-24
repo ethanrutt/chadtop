@@ -1,6 +1,7 @@
 use std::{
     cmp::Reverse,
     fmt::{self, Display},
+    time::{Duration, Instant},
 };
 use sysinfo::{
     CpuRefreshKind, MemoryRefreshKind, Pid, ProcessRefreshKind, RefreshKind, System, UpdateKind,
@@ -80,6 +81,10 @@ pub struct State {
     pub current_pid_watch: Option<u32>,
     pub filter: String,
     pub debug: bool,
+    pub debug_stats_sys: Option<Duration>,
+    pub debug_stats_state: Option<Duration>,
+    pub debug_stats_ram: Option<Duration>,
+    pub debug_stats_cpu: Option<Duration>,
 }
 
 impl State {
@@ -98,6 +103,10 @@ impl State {
             current_pid_watch: None,
             filter: String::new(),
             debug: debug,
+            debug_stats_sys: None,
+            debug_stats_state: None,
+            debug_stats_ram: None,
+            debug_stats_cpu: None,
         };
         new.refresh();
         new
@@ -211,9 +220,32 @@ impl State {
 
     pub fn refresh(&mut self) {
         self.sys.refresh_specifics(get_refresh_kind());
+        self.users.refresh();
         self.refresh_procs();
         self.ram = read_memory(&mut self.sys);
         self.cpus = read_cpus(&mut self.sys);
+    }
+
+    /// for use in debug mode. sets members of state with debug information
+    pub fn debug_refresh(&mut self) {
+        let i = Instant::now();
+
+        self.sys.refresh_specifics(get_refresh_kind());
+        self.users.refresh();
+
+        self.debug_stats_sys = Some(i.elapsed());
+        let i = Instant::now();
+
+        self.refresh_procs();
+        self.debug_stats_state = Some(i.elapsed());
+        let i = Instant::now();
+
+        self.ram = read_memory(&mut self.sys);
+        self.debug_stats_ram = Some(i.elapsed());
+        let i = Instant::now();
+
+        self.cpus = read_cpus(&mut self.sys);
+        self.debug_stats_cpu = Some(i.elapsed());
     }
 
     fn refresh_procs(&mut self) {

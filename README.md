@@ -14,8 +14,7 @@ written for the chad devs in rust (btw) using neovim (btw) developed on arch lin
 - gigachad art
 
 ## TODO
-- handle cmdline options for debug mode and help. look at btop for other useful cmdline options
-- benchmark and improve performance where possible with debug mode
+- improve performance in read_procs and render_proc_list and render_title
 - make readme chad af
 - add pictures
 - release v0.0.0

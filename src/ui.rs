@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
@@ -13,6 +15,10 @@ use crate::state::{CurrentScreen, State};
 
 /// handles ui for chadtop
 pub fn ui(frame: &mut Frame, state: &mut State) {
+    if state.debug {
+        return ui_debug(frame, state);
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(33), Constraint::Percentage(67)])
@@ -40,6 +46,59 @@ pub fn ui(frame: &mut Frame, state: &mut State) {
         CurrentScreen::KillConfirm => render_killconfirm(frame, state),
         _ => {}
     }
+}
+
+pub fn ui_debug(frame: &mut Frame, state: &mut State) {
+    let i = Instant::now();
+
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(33), Constraint::Percentage(67)])
+        .split(frame.area());
+
+    render_title(frame, chunks[0]);
+
+    let title_elapsed = i.elapsed();
+    let i = Instant::now();
+
+    let body_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Fill(1),
+            Constraint::Length(2),
+            Constraint::Percentage(90),
+        ])
+        .split(chunks[1]);
+
+    render_filter(frame, body_chunks[1], state);
+
+    let filter_elapsed = i.elapsed();
+    let i = Instant::now();
+
+    render_proc_list(frame, body_chunks[2], state);
+
+    let proc_list_elapsed = i.elapsed();
+    let i = Instant::now();
+
+    match state.current_screen {
+        CurrentScreen::ProcInfo => render_proc_info_popup(frame, state),
+        CurrentScreen::SysInfo => render_sysinfo(frame, state),
+        CurrentScreen::Help => render_help(frame),
+        CurrentScreen::KillConfirm => render_killconfirm(frame, state),
+        _ => {}
+    }
+
+    let popup_elapsed = i.elapsed();
+
+    render_debug(
+        frame,
+        state,
+        title_elapsed,
+        filter_elapsed,
+        proc_list_elapsed,
+        popup_elapsed,
+        body_chunks[0],
+    );
 }
 
 /// renders the title of chadtop
@@ -604,6 +663,53 @@ fn render_killconfirm(frame: &mut Frame, state: &mut State) {
 
     frame.render_widget(Clear, area);
     frame.render_widget(killconfirm_text, area);
+}
+
+fn render_debug(
+    frame: &mut Frame,
+    state: &State,
+    title: Duration,
+    filter: Duration,
+    proc_list: Duration,
+    popup: Duration,
+    chunk: Rect,
+) {
+    let layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(chunk);
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(format!(
+            "sys collect: {:?}",
+            state.debug_stats_sys.unwrap_or(Instant::now().elapsed())
+        )),
+        ListItem::from(format!(
+            "state collect: {:?}",
+            state.debug_stats_state.unwrap_or(Instant::now().elapsed())
+        )),
+        ListItem::from(format!(
+            "ram collect: {:?}",
+            state.debug_stats_ram.unwrap_or(Instant::now().elapsed())
+        )),
+        ListItem::from(format!(
+            "cpu collect: {:?}",
+            state.debug_stats_cpu.unwrap_or(Instant::now().elapsed())
+        )),
+    ]);
+
+    let l = List::new(items);
+    frame.render_widget(l, layout[0]);
+
+    let items: Vec<ListItem> = Vec::from([
+        ListItem::from(format!("title render: {:?}", title)),
+        ListItem::from(format!("filter render: {:?}", filter)),
+        ListItem::from(format!("proc list render: {:?}", proc_list)),
+        ListItem::from(format!("popup render: {:?}", popup)),
+    ]);
+
+    let l = List::new(items);
+    frame.render_widget(l, layout[1]);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
