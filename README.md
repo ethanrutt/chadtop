@@ -52,9 +52,8 @@ A process information tui written for the chad devs in rust (btw) using neovim (
 
 ## Features
 - see processes
-- see thorough information about a process
 - sort by various things including cpu usage %, memory, name, pid, etc.
-- filter by process name
+- filter by process name and pid
 - kill processes
 - see system information
 - gigachad art

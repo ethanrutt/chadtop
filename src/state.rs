@@ -254,7 +254,8 @@ impl State {
         if self.filter.len() > 0 {
             self.processes.retain(|p| {
                 let name = p.name.clone().unwrap_or(String::new());
-                name.starts_with(&self.filter)
+                let pid = p.pid.to_string();
+                name.starts_with(&self.filter) || pid.starts_with(&self.filter)
             });
         }
 
