@@ -60,6 +60,11 @@ Ever wanted to get disk info but `df` is too hard to read? Didn't want to parse
 
 Well lucky for you I made **yet another** `top` clone!
 
+## Images
+![chadtop sysinfo](/img/chadtop_sysinfo.png)
+![chadtop rice](/img/rice.png)
+![chadtop keybinds](/img/keybinds.png)
+
 ## Motivation
 - I use TUI's a lot (neovim, fzf, nmtui, and much more), so I wanted to write
 one just to see what goes into it.
@@ -75,8 +80,6 @@ I feel like it needs to be, and you can see how the performance is by using the
 please give me some tips and/or submit a PR. This is my first rust project so I
 am still a noob rustacean.
 
-<!-- put images here -->
-
 ## Features
 - see processes
 - sort by various things including cpu usage %, memory, name, pid, etc.
@@ -90,8 +93,6 @@ am still a noob rustacean.
 > You might start growing a neckbeard if you type `chadtop` in your terminal
 
 ## TODO
-- add pictures
-- release v0.0.0
 - write man page
 - add package files for aur
 - release v0.0.1
