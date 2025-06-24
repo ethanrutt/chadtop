@@ -132,24 +132,68 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
         .centered()
         .block(no_border_block.clone());
 
-    let gigachad_art = Paragraph::new(Text::raw(if small_mode(&chunk) {
+    let gigachad_art = Paragraph::new(Text::raw(if chunk.height < 30 && chunk.width < 45 {
         "
-⠀⠀⠀⠀⠀⢀⣠⢴⣮⣽⣿⣿⣿⣿⣿⣯⣭⣭⣿⣢⢄⡀⠀⠀⠀⠀
-⠀⠀⠀⠀⣴⣿⣾⣿⣿⣿⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⢆⠀⠀⠀
-⠀⠀⢀⣾⣿⣿⣿⣿⣿⣿⡿⠛⠋⠙⣉⠛⣛⣿⣿⣿⠟⠛⢧⢷⠀⠀
-⠀⠀⡼⣿⣿⣿⣿⣿⣿⠯⠄⠀⠀⠀⠀⣦⣤⣽⣿⣟⣗⣄⠈⢣⡗⠀
-⠀⢠⢿⣿⣿⣿⣿⣿⣿⡴⠚⠉⠀⢀⣤⣬⣬⣿⣿⣿⠹⣿⡇⠀⣿⠀
-⠀⢸⢸⣿⣿⣿⣿⣿⠋⠀⠀⢠⠴⠟⣛⣿⣿⣿⣿⣿⣶⣾⣰⡀⢹⡢
-⠀⣸⢾⠟⠻⣿⣿⠇⠀⠀⠀⠐⢿⣿⣿⣿⣿⣿⣿⡟⢻⢻⣿⣿⣶⡇
-⢀⣾⣏⣐⡄⠀⣯⡀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⠄⠘⣿⣿⣿⣷⡅
-⢸⣤⣿⣿⠀⠀⣿⣷⡀⠀⠀⠀⣠⣶⣿⣿⣿⣿⠇⣄⣀⠸⡾⣷⡄⡇
-⠈⠣⣃⡈⢉⣸⣿⡻⣿⣮⣴⣾⡏⢀⣽⣿⣿⣿⣶⣶⣶⣴⣇⣿⠀⣱
-⠀⠀⡏⡏⠁⣿⢿⣆⣿⣿⣿⣿⣧⣿⣿⣿⣛⣿⣿⣿⣿⡦⣾⡟⢠⣃
-⠀⠀⣧⡇⢠⡏⢂⢹⣿⣿⣿⣿⣿⣿⣿⣿⡷⣬⣭⣙⡛⢳⣼⣿⣿⣎
-⠀⢠⢿⠀⠘⣿⣧⣵⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⣿⣿⣥⣿⣿⢿⡿
-⠀⢸⡟⠀⠀⠙⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣸⣿⢻⡿⠀
-⠀⣯⡇⠀⠀⠀⠀⠈⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⢸⠁⠀
-⣴⠟⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⣜⡆⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣶⣦⡀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢰⣿⣿⣿⠟⠁⠀⠉⢩⡯⡉⢣⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⣾⣿⣿⡿⠒⢀⣠⣬⣬⣽⣹⠆⢇⠀⠀⠀⠀⠀
+⠀⠀⠀⡻⡿⡿⠁⠀⠽⣾⣿⣿⡟⢿⣷⣾⡄⠀⠀⠀⠀
+⠀⠀⠀⣿⡓⣷⡄⠀⢀⣬⣿⣿⢇⠸⣿⣿⠁⠀⠀⠀⠀
+⠀⠀⠀⠡⢳⣿⣻⣿⣯⣴⣿⣿⣿⣷⣷⢠⠇⠀⠀⠀⠀
+⠀⠀⠀⠀⢸⡎⣿⣿⣿⣿⣿⣺⣿⡵⣾⠏⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠈⠻⢿⣿⣿⣿⣿⣿⣿⣯⡟⠀⠀⠀⠀⠀⠀
+⠀⠀⢠⠀⠀⠀⠀⠙⠻⣿⣿⣿⣿⣿⡥⠃⠀⠀⠀⠀⠀
+⠒⣊⠁⠀⠀⠀⠀⡀⠀⢹⡿⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀
+⡼⠃⠀⠀⠀⠀⠀⡆⢀⣿⢃⢸⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⣧⣄⣀⣀⡀⡀⠀⣿⣾⣧⠆⢰⡉⠒⢤⡀⠀⠀⠀⠀⠀
+"
+    } else if chunk.height < 30 {
+        "
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣾⣿⣿⣽⢿⡆⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⡿⢋⣝⠛⠿⠿⣿⣿⠛⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⡿⠛⣥⣿⣥⢰⠃⠀⠈⡿⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣟⣿⠣⣤⣿⣿⣿⣿⣷⣷⣤⡇⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣆⠙⣿⣮⣉⣿⣿⠛⠛⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡞⣿⢻⣿⣿⣿⣿⣿⣿⣿⡂⠎⠀⠀⠀⠀⠀
+⢤⣶⣶⣦⣤⣶⣶⠿⠻⢭⣻⡟⠁⢸⡿⠁⣝⢿⣿⣿⣿⣿⣿⠁⠀⠀⠀⠀⠀⠀
+⠟⣹⣴⣿⣿⣿⣿⡿⣾⣿⡏⠠⢰⢸⣧⢀⣼⡿⠟⠛⠛⡛⠫⢀⠀⠀⠀⠀⠀⠀
+⡏⢛⣽⣿⣿⣿⣿⣇⣻⣿⣧⣀⢸⠘⣧⡟⣧⣠⠄⠀⢠⣿⣶⣄⠑⢄⠀⠀⠀⠀
+⢀⣾⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⢸⣿⣗⣿⣟⡴⠂⣿⡿⠟⠳⠷⢄⠁⡀⠀⠀
+⡏⢙⡟⣿⣿⣿⣿⣿⣿⣿⣿⣿⠻⣿⣿⣟⡁⣑⣤⠀⠀⢰⠀⠠⠀⠀⠁⠈⠂⢄
+⣿⣘⣫⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣿⣧⣬⣿⣿⣯⣧⣤⣟⣥⣔⣀⣀⣀⣀⣀⣀
+"
+    } else if chunk.width < 45 {
+        "
+⠀⠀⠀⠀⠀⠀⠀⣀⣤⣤⣤⣶⣤⣤⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⣠⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⠀⠀⠀⠀⠀
+⠀⠀⢀⣾⣿⣿⣿⣿⣿⡿⠋⠉⠛⠛⠛⠿⣿⠿⠿⢿⣇⠀⠀⠀⠀
+⠀⠀⣾⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀⠀⡀⢀⣽⣷⣆⡀⠙⣧⠀⠀⠀
+⠀⢰⣿⣿⣿⣿⣿⣷⠶⠋⠀⠀⣠⣤⣤⣉⣉⣿⠙⣿⠀⢸⡆⠀⠀
+⠀⢸⣿⣿⣿⣿⣿⠁⠀⠀⠴⡟⣻⣿⣿⣿⣿⣿⣶⣿⣦⡀⣇⠀⠀
+⠀⢨⠟⡿⠻⣿⠃⠀⠀⠀⠻⢿⣿⣿⣿⣿⣿⠏⢹⣿⣿⣿⢿⡇⠀
+⠀⣿⣼⣷⡶⣿⣄⠀⠀⠀⠀⠀⢉⣿⣿⣿⡿⠀⠸⣿⣿⡿⣷⠃⠀
+⠀⢻⡿⣦⢀⣿⣿⣄⡀⣀⣰⠾⠛⣻⣿⣿⣟⣲⡀⢸⡿⡟⠹⡆⠀
+⠀⠀⢰⠞⣾⣿⡛⣿⣿⣿⣿⣰⣾⣿⣿⣿⣿⣿⣿⣿⣿⡇⢰⡇⠀
+⠀⠀⠘⠀⣿⡽⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢿⠿⣍⣿⣧⡏⠀⠀
+⠀⠀⠀⠀⣿⣷⣿⣿⣿⣿⣿⣿⣿⣿⣷⣮⣽⣿⣷⣙⣿⡟⠀⠀⠀
+⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⣹⡿⠇⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠈⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡧⣦⠀⠀⠀
+⢠⡆⠀⠀⠀⠀⠀⠀⠀⠉⠻⣿⣿⣾⣿⣿⣿⣿⣿⣿⡶⠏⠀⠀⠀
+⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠚⣿⣿⣿⠿⣿⣿⠿⠟⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢠⠀⠀⢀⣿⣿⠁⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣾⠀⠀⣾⣿⠋⠀⢠⡇⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣿⣆⣼⣿⠁⢠⠃⠈⠓⠦⣄⡀⠀⠀⠀⠀⠀
+⣤⣤⣦⣄⣀⣀⠀⢀⣿⣿⠻⣿⣰⠻⠀⠸⣧⡀⠀⠉⠳⣄⠀⠀⠀
+⠈⠉⠉⠙⠛⠿⣦⣼⡏⢻⣿⣿⠇⠀⠁⠀⠻⣿⠙⣶⣄⠈⠳⣄⡀
+⠀⠀⠁⣐⠀⠀⠀⠈⠳⡘⣿⡟⣀⡠⠿⠶⠒⠟⠓⠀⠹⡄⢴⣬⣍
+⠀⠀⠀⠙⢀⣀⠐⠲⠤⠁⢘⣠⣿⣷⣦⠀⠀⠀⠀⠀⠀⠙⢿⣿⣏
+⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠈⣿⣿⣷⣯⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻
+⠀⠀⠀⠀⠀⠀⠀⠀⠘⢦⠀⢹⣿⣏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⣸⣿⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣤⣀⣄⣀⡀⠀⠀⠀⠀⠀⠀⠈⣿⣿⡄⣉⡀⠀⠀⠀⠀⠀⠀⠀⢀
+
 "
     } else {
         "
@@ -404,12 +448,7 @@ fn render_filter(frame: &mut Frame, chunk: Rect, state: &mut State) {
 }
 
 fn render_sysinfo(frame: &mut Frame, state: &mut State) {
-    let area: Rect;
-    if small_mode(&frame.area()) {
-        area = centered_rect(90, 90, frame.area());
-    } else {
-        area = centered_rect(50, 50, frame.area());
-    }
+    let area = responsive_area(frame.area());
 
     frame.render_widget(Clear, area);
 
@@ -559,12 +598,7 @@ fn render_sysinfo_mem(frame: &mut Frame, chunk: Rect, state: &mut State) {
 }
 
 fn render_help(frame: &mut Frame) {
-    let area: Rect;
-    if small_mode(&frame.area()) {
-        area = centered_rect(90, 90, frame.area());
-    } else {
-        area = centered_rect(50, 50, frame.area());
-    }
+    let area = responsive_area(frame.area());
 
     frame.render_widget(Clear, area);
 
@@ -832,19 +866,17 @@ fn right_pad(s: &mut String, total_len: usize) {
     s.insert_str(s.len(), &" ".to_string().repeat(total_len - s.len()));
 }
 
-/// returns a boolean whether to render in large mode or small mode
-/// specifically, whether the screen / area is big enough to render normally, or if we need to
-/// condense the ui and render stuff to take up more space, i.e. if the terminal is full screen or
-/// if it is smaller and takes up only a corner of the screen or something
+/// returns a centered rect based on screen size for popups
 ///
 /// # Examples
 /// ```rust
-/// if small_mode(frame.area()) {
-///     render_small_widget(frame, state);
-/// } else {
-///     render_normal_widget(frame, state);
-/// }
+/// let area = responsive_area(frame.area());
+/// frame.render_widget(widget, area);
 /// ```
-fn small_mode(chunk: &Rect) -> bool {
-    chunk.width < 65 || chunk.height < 40
+fn responsive_area(chunk: Rect) -> Rect {
+    if chunk.width < 65 || chunk.height < 40 {
+        centered_rect(90, 90, chunk)
+    } else {
+        centered_rect(50, 50, chunk)
+    }
 }
