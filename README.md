@@ -46,23 +46,29 @@
 > [!NOTE]
 > This `README.md` is *mostly* satire
 
-A process information tui written for the chad devs in rust (btw) using neovim (btw) developed on arch linux (btw)
+A process information tui written for the chad devs in rust (btw) using neovim
+(btw) developed on arch linux (btw)
 
-Have you ever needed to kill a process but thought that opening up a GUI process monitor was too slow for you?
+Have you ever needed to kill a process but thought that opening up a GUI
+process monitor was too slow for you?
 
-Ever thought that using `top` or `ps -ef | grep && kill` or `pkill` was too cringe?
+Ever thought that using `top` or `ps -ef | grep && kill` or `pkill` was too
+cringe?
 
-Ever wanted to get disk info but `df` is too hard to read? Didn't want to parse `/proc`?
+Ever wanted to get disk info but `df` is too hard to read? Didn't want to parse
+`/proc`?
 
 Well lucky for you I made **yet another** `top` clone!
 
 ## Motivation
-I use TUI's a lot (neovim, fzf, nmtui, and much more), so I wanted to write one
-just to see what goes into it. I also wanted to learn some stuff about the
-`/proc` filesystem, but ended up using the `sysinfo` crate in rust since I want
-this to be able to run on `macos` as well. I also wanted to have fun colors and
-art since I will probably use this in a Linux rice in the near future. Finally,
-I wanted it to be performant, both for me to practice optimizing and also
+- I use TUI's a lot (neovim, fzf, nmtui, and much more), so I wanted to write
+one just to see what goes into it.
+- I wanted to learn some stuff about the `/proc` filesystem, but ended up using
+the `sysinfo` crate in rust since I want this to be able to run on `macos` as
+well.
+- I wanted to have fun colors and art since I will probably use this in a Linux
+rice in the near future.
+- I wanted it to be performant, both for me to practice optimizing and also
 because I don't like slow software. While single threaded it is as efficient as
 I feel like it needs to be, and you can see how the performance is by using the
 `debug` flag i.e. `chadtop -d`. I am open to further performance improvements,
