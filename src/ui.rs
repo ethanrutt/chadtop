@@ -253,47 +253,41 @@ fn render_title(frame: &mut Frame, chunk: Rect) {
 ///
 /// We also assume that the argument `state` is already initialized
 fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
+    let default_style = Style::default();
+
     let process_block = Block::new()
         .title(Line::styled(
             "processes",
-            Style::default().fg(Color::LightBlue),
+            default_style.fg(Color::LightBlue),
         ))
         .title(Line::styled(
             format!("{}", state.process_sort_strategy),
-            Style::default().fg(state.process_sort_strategy.get_color()),
+            default_style.fg(state.process_sort_strategy.get_color()),
         ))
         .borders(Borders::LEFT | Borders::TOP)
         .padding(Padding::left(1));
 
-    let process_table_header = ["pid", "name", "memory", "cpu usage", "user", "ppid"]
-        .into_iter()
-        .map(|h| Cell::new(h))
-        .collect::<Row>()
-        .style(Style::default().fg(Color::Blue))
+    let header_cells = ["pid", "name", "memory", "cpu usage", "user", "ppid"].map(Cell::new);
+
+    let process_table_header = Row::new(header_cells)
+        .style(default_style.fg(Color::Blue))
         .bold()
         .height(1);
 
     let rows = state.processes.iter().map(|process| {
-        // bytes to mb
         let row = [
             process.pid.to_string(),
-            process.name.clone().unwrap_or(String::from("n/a")),
+            process.name.as_deref().unwrap_or("n/a").to_string(),
             bytes_to_str(process.memory),
             format!("{:.2}%", process.cpu_usage),
-            match &process.user {
-                Some(x) => x.clone(),
-                None => String::from("n/a"),
-            },
-            match process.ppid {
-                Some(x) => x.to_string(),
-                None => String::from("n/a"),
-            },
+            process.user.as_deref().unwrap_or("n/a").to_string(),
+            process
+                .ppid
+                .map_or("n/a".to_string(), |ppid| ppid.to_string()),
         ];
 
-        row.into_iter()
-            .map(|p| Cell::new(p))
-            .collect::<Row>()
-            .style(Style::default().bg(Color::DarkGray))
+        Row::new(row.map(Cell::new))
+            .style(default_style.bg(Color::DarkGray))
             .height(1)
     });
 
@@ -310,7 +304,7 @@ fn render_proc_list(frame: &mut Frame, chunk: Rect, state: &mut State) {
     )
     .header(process_table_header)
     .row_highlight_style(
-        Style::default()
+        default_style
             .add_modifier(Modifier::REVERSED)
             .fg(Color::Blue),
     )
