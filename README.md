@@ -43,7 +43,7 @@ A process information tui written for the chad devs in rust (btw) using neovim (
 ```
 ![rust](https://img.shields.io/static/v1?logo=rust&label=&message=rust&color=FFF&logoColor=000000&style=flat-square)
 ![arch](https://img.shields.io/static/v1?logo=archlinux&label=&message=arch&color=3776AB&logoColor=1793D1&style=flat-square)
-![macos](https://img.shields.io/static/v1?logo=macos&label=&message=arch&color=FFF&logoColor=000000&style=flat-square)
+![macos](https://img.shields.io/static/v1?logo=macos&label=&message=macos&color=FFF&logoColor=000000&style=flat-square)
 
 > [!NOTE]
 > This `README.md` is *mostly* satire
