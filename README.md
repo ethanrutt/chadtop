@@ -53,13 +53,6 @@ am still a noob rustacean.
 > [!WARNING]
 > You might start growing a neckbeard if you type `chadtop` in your terminal
 
-## TODO
-- write man page
-- add package files for aur
-- release v0.0.1
-- add package files for homebrew tap
-- release v0.0.2
-
 ## References
 - [ratatui.rs](https://ratatui.rs/)
 - [rust sysinfo](https://docs.rs/sysinfo/latest/sysinfo/)
