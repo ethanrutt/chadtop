@@ -26,6 +26,18 @@ Well lucky for you I made **yet another** `top` clone!
 ![chadtop rice](/img/rice.png)
 ![chadtop keybinds](/img/keybinds.png)
 
+## Installation
+### Arch Linux Manually
+- [how to install aur packages](https://wiki.archlinux.org/title/Arch_User_Repository#Installing_and_upgrading_packages)
+- [package link](https://aur.archlinux.org/packages/chadtop)
+### AUR Helper
+i.e. yay
+```bash
+$ yay -S chadtop
+```
+### Homebrew
+*coming soon*
+
 ## Motivation
 - I use TUI's a lot (neovim, fzf, nmtui, and much more), so I wanted to write
 one just to see what goes into it.
