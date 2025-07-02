@@ -4,6 +4,16 @@
 ![arch](https://img.shields.io/static/v1?logo=archlinux&label=&message=arch&color=3776AB&logoColor=1793D1&style=flat-square)
 ![macos](https://img.shields.io/static/v1?logo=apple&label=&message=macos&color=FFF&logoColor=000000&style=flat-square)
 
+## Table of Contents
+- [images](#Images)
+- [arch installation](#Arch)
+- [brew/macos installation](#Homebrew)
+- [binary installation](#Binary)
+- [motivation](#Motivation)
+- [features](#Features)
+- [references](#References)
+
+
 > [!NOTE]
 > This `README.md` is *mostly* satire
 
@@ -27,16 +37,19 @@ Well lucky for you I made **yet another** `top` clone!
 ![chadtop keybinds](/img/keybinds.png)
 
 ## Installation
-### Arch Linux Manually
+### Arch
+#### Arch Linux Manually
 - [how to install aur packages](https://wiki.archlinux.org/title/Arch_User_Repository#Installing_and_upgrading_packages)
 - [package link](https://aur.archlinux.org/packages/chadtop)
-### AUR Helper
+#### AUR Helper
 i.e. yay
 ```bash
 $ yay -S chadtop
 ```
 ### Homebrew
 *coming soon*
+### Binary
+The binary is available in the releases tab
 
 ## Motivation
 - I use TUI's a lot (neovim, fzf, nmtui, and much more), so I wanted to write
