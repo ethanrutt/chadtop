@@ -47,7 +47,9 @@ i.e. yay
 $ yay -S chadtop
 ```
 ### Homebrew
-*coming soon*
+```bash
+$ brew tap ethanrutt/chadtop ; brew install chadtop
+```
 ### Binary
 The binary is available in the releases tab
 
