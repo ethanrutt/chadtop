@@ -32,9 +32,8 @@ Ever wanted to get disk info but `df` is too hard to read? Didn't want to parse
 Well lucky for you I made **yet another** `top` clone!
 
 ## Images
-![chadtop sysinfo](/img/chadtop_sysinfo.png)
-![chadtop rice](/img/rice.png)
-![chadtop keybinds](/img/keybinds.png)
+
+https://github.com/user-attachments/assets/054e8bc2-1e4b-4624-a73f-15e53c65be15
 
 ## Installation
 ### Arch
